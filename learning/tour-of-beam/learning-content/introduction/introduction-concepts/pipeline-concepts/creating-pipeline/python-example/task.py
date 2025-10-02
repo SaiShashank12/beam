@@ -27,8 +27,10 @@
 
 import apache_beam as beam
 
+
 # Output PCollection
 class Output(beam.PTransform):
+
     class _OutputFn(beam.DoFn):
 
         def process(self, element):
@@ -37,7 +39,6 @@ class Output(beam.PTransform):
     def expand(self, input):
         input | beam.ParDo(self._OutputFn())
 
-with beam.Pipeline() as p:
-  (p | beam.Create(['Hello Beam'])
-   | Output())
 
+with beam.Pipeline() as p:
+    (p | beam.Create(['Hello Beam']) | Output())

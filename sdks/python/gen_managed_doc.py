@@ -117,7 +117,7 @@ def generate_managed_doc(output_location):
 
   # Creating a unique list of expansion service jars.
   expansion_service_jar_targets = list(
-    dict.fromkeys(MANAGED_TRANSFORM_URN_TO_JAR_TARGET_MAPPING.values()))
+      dict.fromkeys(MANAGED_TRANSFORM_URN_TO_JAR_TARGET_MAPPING.values()))
 
   read_names_and_identifiers = managed.Read._READ_TRANSFORMS
   write_names_and_identifiers = managed.Write._WRITE_TRANSFORMS
@@ -136,8 +136,8 @@ def generate_managed_doc(output_location):
       elif identifier in write_names_and_identifiers.values():
         mode = "write"
         name = next(
-            k for k,
-            v in write_names_and_identifiers.items() if v == identifier)
+            k for k, v in write_names_and_identifiers.items()
+            if v == identifier)
       else:
         continue
 

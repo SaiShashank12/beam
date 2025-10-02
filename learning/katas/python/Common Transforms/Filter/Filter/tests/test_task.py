@@ -23,6 +23,7 @@ from test_helper import test_is_not_empty, get_file_output
 
 
 class TestCase(unittest.TestCase):
+
     def test_not_empty(self):
         self.assertTrue(test_is_not_empty(), 'The output is empty')
 
@@ -32,4 +33,5 @@ class TestCase(unittest.TestCase):
         answers = ['2', '4', '6', '8', '10']
 
         for num in answers:
-            self.assertIn(num, output, "Incorrect output. Filter out the odd numbers.")
+            self.assertIn(num, output,
+                          "Incorrect output. Filter out the odd numbers.")

@@ -27,29 +27,35 @@
 
 import apache_beam as beam
 
+
 # Output PCollection
 class Output(beam.PTransform):
+
     class _OutputFn(beam.DoFn):
+
         def __init__(self, prefix=''):
             super().__init__()
             self.prefix = prefix
 
         def process(self, element):
-            print(self.prefix+str(element))
+            print(self.prefix + str(element))
 
-    def __init__(self, label=None,prefix=''):
+    def __init__(self, label=None, prefix=''):
         super().__init__(label)
         self.prefix = prefix
 
     def expand(self, input):
         input | beam.ParDo(self._OutputFn(self.prefix))
 
+
 with beam.Pipeline() as p:
-  # List of elements start with a
-  wordsStartingWithA = p | 'Words starting with A' >> beam.Create(['apple', 'ant', 'arrow'])
+    # List of elements start with a
+    wordsStartingWithA = p | 'Words starting with A' >> beam.Create(
+        ['apple', 'ant', 'arrow'])
 
-  # List of elements start with b
-  wordsStartingWithB = p | 'Words starting with B' >> beam.Create(['ball', 'book', 'bow'])
+    # List of elements start with b
+    wordsStartingWithB = p | 'Words starting with B' >> beam.Create(
+        ['ball', 'book', 'bow'])
 
-  # Accept two PCollection data types are the same combines and returns one PCollection
-  ((wordsStartingWithA, wordsStartingWithB) | beam.Flatten() | Output())
+    # Accept two PCollection data types are the same combines and returns one PCollection
+    ((wordsStartingWithA, wordsStartingWithB) | beam.Flatten() | Output())

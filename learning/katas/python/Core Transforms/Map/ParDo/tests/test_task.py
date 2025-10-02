@@ -23,10 +23,12 @@ from test_helper import get_file_output
 
 
 class TestCase(unittest.TestCase):
+
     def test_output(self):
         output = get_file_output(path="task.py")
 
         answers = ['10', '20', '30', '40', '50']
 
         for ans in answers:
-            self.assertIn(ans, output, "Incorrect output. Multiply each element by 10.")
+            self.assertIn(ans, output,
+                          "Incorrect output. Multiply each element by 10.")

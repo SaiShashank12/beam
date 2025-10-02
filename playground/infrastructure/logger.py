@@ -12,7 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """
 Log configurator. Adds required handlers and configures log format.
 """
@@ -37,11 +36,12 @@ def setup_logger():
     )
 
     stdout_handler = logging.StreamHandler(sys.stdout)
-    stdout_handler.addFilter(lambda record: record.levelno in (WARNING,))
+    stdout_handler.addFilter(lambda record: record.levelno in (WARNING, ))
     stdout_handler.setFormatter(formatter)
 
     stderr_handler = logging.StreamHandler(sys.stderr)
-    stderr_handler.addFilter(lambda record: record.levelno in (ERROR, CRITICAL))
+    stderr_handler.addFilter(lambda record: record.levelno in
+                             (ERROR, CRITICAL))
     stderr_handler.setFormatter(formatter)
 
     log.addHandler(stdout_handler)

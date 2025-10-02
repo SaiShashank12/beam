@@ -61,7 +61,7 @@ def pull_from_url(file_name, url, dep, no_list, use_cache=False):
     # Replace file path with absolute path to manual licenses
     if url.startswith('file://{}'):
         url = url.format(manual_license_path)
-        logging.info('Replaced local file URL with {url} for {dep}'.format(url=url, dep=dep))
+        logging.info(f'Replaced local file URL with {url} for {dep}')
 
     # Take into account opensource.org changes that cause 404 on licenses
     if 'opensource.org' in url and url.endswith('-license.php'):
@@ -69,53 +69,46 @@ def pull_from_url(file_name, url, dep, no_list, use_cache=False):
 
     if use_cache:
         md5sum = hashlib.md5(url.encode()).hexdigest()
-        if md5sum not in CACHED_LICENSES:
-            pulled_file_name = cached_license_path + "/" + md5sum
-            logging.info(f"Requested license {url} not in cache. Pulling it into {pulled_file_name}")
-        else:
-            cached_file_name = cached_license_path + "/" + md5sum
+        cached_file_name = os.path.join(cached_license_path, md5sum)
+        if os.path.exists(cached_file_name):
             logging.info(f"Requested license {url} in cache. Copying {cached_file_name} -> {file_name}")
             shutil.copy(cached_file_name, file_name)
             return
+        else:
+            pulled_file_name = cached_file_name
+            logging.info(f"Requested license {url} not in cache. Pulling it into {pulled_file_name}")
     else:
         pulled_file_name = file_name
 
     try:
         url_read = urlopen(Request(url, headers={
             'User-Agent': 'Apache Beam',
-            # MPL license fails to resolve redirects without this header
-            # see https://github.com/apache/beam/issues/22394
             'accept-language': 'en-US,en;q=0.9',
         }))
         with open(pulled_file_name, 'wb') as temp_write:
             shutil.copyfileobj(url_read, temp_write)
-        logging.debug(
-            'Successfully pulled {file_name} from {url} for {dep}'.format(
-                url=url, file_name=pulled_file_name, dep=dep))
-    except URLError as e:
+        logging.debug(f'Successfully pulled {pulled_file_name} from {url} for {dep}')
+    except HTTPError as e:
+        if e.code == 403 and use_cache and os.path.exists(cached_file_name):
+            logging.warning(f"HTTP 403 for {url}, using cached license at {cached_file_name}")
+            shutil.copy(cached_file_name, file_name)
+            return
         traceback.print_exc()
         if resolve_retry_number(pull_from_url) < RETRY_NUM:
-            logging.error('Invalid url for {dep}: {url}. Retrying...'.format(
-                url=url, dep=dep))
+            logging.error(f'Received {e.code} from {url} for {dep}. Retrying...')
             raise
         else:
-            logging.error(
-                'Invalid url for {dep}: {url} after {n} retries.'.format(
-                    url=url, dep=dep, n=RETRY_NUM))
+            logging.error(f'Received {e.code} from {url} for {dep} after {RETRY_NUM} retries.')
             with thread_lock:
                 no_list.append(dep)
             return
-    except HTTPError as e:
+    except URLError as e:
         traceback.print_exc()
         if resolve_retry_number(pull_from_url) < RETRY_NUM:
-            logging.info(
-                'Received {code} from {url} for {dep}. Retrying...'.format(
-                    code=e.code, url=url, dep=dep))
+            logging.error(f'Invalid url for {dep}: {url}. Retrying...')
             raise
         else:
-            logging.error(
-                'Received {code} from {url} for {dep} after {n} retries.'.
-                format(code=e.code, url=url, dep=dep, n=RETRY_NUM))
+            logging.error(f'Invalid url for {dep}: {url} after {RETRY_NUM} retries.')
             with thread_lock:
                 no_list.append(dep)
             return
@@ -123,13 +116,11 @@ def pull_from_url(file_name, url, dep, no_list, use_cache=False):
         traceback.print_exc()
         if resolve_retry_number(pull_from_url) < RETRY_NUM:
             logging.error(
-                'Error occurred when pull {file_name} from {url} for {dep}. Retrying...'
-                .format(url=url, file_name=file_name, dep=dep))
+                f'Error occurred when pulling {file_name} from {url} for {dep}. Retrying...')
             raise
         else:
             logging.error(
-                'Error occurred when pull {file_name} from {url} for {dep} after {n} retries.'
-                .format(url=url, file_name=file_name, dep=dep, n=RETRY_NUM))
+                f'Error occurred when pulling {file_name} from {url} for {dep} after {RETRY_NUM} retries.')
             with thread_lock:
                 no_list.append(dep)
             return
@@ -137,7 +128,7 @@ def pull_from_url(file_name, url, dep, no_list, use_cache=False):
     if use_cache:
         CACHED_LICENSES.add(os.path.basename(pulled_file_name))
         logging.info(f"Copying {pulled_file_name} -> {file_name}")
-        shutil.copy(pull_file_name, file_name)
+        shutil.copy(pulled_file_name, file_name)
 
 def pull_source_code(base_url, dir_name, dep):
     # base_url example: https://repo1.maven.org/maven2/org/mortbay/jetty/jsp-2.1/6.1.14/

@@ -27,17 +27,20 @@
 
 import apache_beam as beam
 
+
 # Output PCollection
 class Output(beam.PTransform):
+
     class _OutputFn(beam.DoFn):
+
         def __init__(self, prefix=''):
             super().__init__()
             self.prefix = prefix
 
         def process(self, element):
-            print(self.prefix+str(element))
+            print(self.prefix + str(element))
 
-    def __init__(self, label=None,prefix=''):
+    def __init__(self, label=None, prefix=''):
         super().__init__(label)
         self.prefix = prefix
 
@@ -46,6 +49,7 @@ class Output(beam.PTransform):
 
 
 class GroupWordsByFirstLetter(beam.CombineFn):
+
     def create_accumulator(self):
         return {}
 
@@ -69,12 +73,11 @@ class GroupWordsByFirstLetter(beam.CombineFn):
         return accumulator
 
 
-
 with beam.Pipeline() as p:
-  parts = p | 'Log words' >> beam.io.ReadFromText('gs://apache-beam-samples/shakespeare/kinglear.txt') \
-            | beam.combiners.Sample.FixedSizeGlobally(100) \
-            | beam.FlatMap(lambda line: line) \
-            | beam.FlatMap(lambda sentence: sentence.split()) \
-            | beam.Filter(lambda word: not word.isspace() or word.isalnum()) \
-            | beam.CombineGlobally(GroupWordsByFirstLetter()) \
-            | Output()
+    parts = p | 'Log words' >> beam.io.ReadFromText('gs://apache-beam-samples/shakespeare/kinglear.txt') \
+              | beam.combiners.Sample.FixedSizeGlobally(100) \
+              | beam.FlatMap(lambda line: line) \
+              | beam.FlatMap(lambda sentence: sentence.split()) \
+              | beam.Filter(lambda word: not word.isspace() or word.isalnum()) \
+              | beam.CombineGlobally(GroupWordsByFirstLetter()) \
+              | Output()

@@ -36,12 +36,11 @@ class ExtractAndMultiplyNumbers(beam.PTransform):
     def expand(self, pcoll):
         return (pcoll
                 | beam.FlatMap(lambda line: map(int, line.split(',')))
-                | beam.Map(lambda num: num * 10)
-                )
+                | beam.Map(lambda num: num * 10))
 
 
 with beam.Pipeline() as p:
 
-  (p | beam.Create(['1,2,3,4,5', '6,7,8,9,10'])
+    (p | beam.Create(['1,2,3,4,5', '6,7,8,9,10'])
      | ExtractAndMultiplyNumbers()
      | beam.LogElements())

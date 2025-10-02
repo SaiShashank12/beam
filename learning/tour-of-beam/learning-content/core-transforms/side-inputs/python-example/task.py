@@ -27,24 +27,29 @@
 
 import apache_beam as beam
 
+
 # Output PCollection
 class Output(beam.PTransform):
+
     class _OutputFn(beam.DoFn):
+
         def __init__(self, prefix=''):
             super().__init__()
             self.prefix = prefix
 
         def process(self, element):
-            print(self.prefix+str(element))
+            print(self.prefix + str(element))
 
-    def __init__(self, label=None,prefix=''):
+    def __init__(self, label=None, prefix=''):
         super().__init__(label)
         self.prefix = prefix
 
     def expand(self, input):
         input | beam.ParDo(self._OutputFn(self.prefix))
 
+
 class Person:
+
     def __init__(self, name, city, country=''):
         self.name = name
         self.city = city
@@ -62,8 +67,8 @@ class EnrichCountryDoFn(beam.DoFn):
 
 
 with beam.Pipeline() as p:
-  # List of elements
-  cities_to_countries = {
+    # List of elements
+    cities_to_countries = {
         'Beijing': 'China',
         'London': 'United Kingdom',
         'San Francisco': 'United States',
@@ -71,7 +76,7 @@ with beam.Pipeline() as p:
         'Sydney': 'Australia'
     }
 
-  persons = [
+    persons = [
         Person('Henry', 'Singapore'),
         Person('Jane', 'San Francisco'),
         Person('Lee', 'Beijing'),
@@ -79,6 +84,6 @@ with beam.Pipeline() as p:
         Person('Alfred', 'London')
     ]
 
-  (p | beam.Create(persons)
+    (p | beam.Create(persons)
      | beam.ParDo(EnrichCountryDoFn(), cities_to_countries)
      | Output())

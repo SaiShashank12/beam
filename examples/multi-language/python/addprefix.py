@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """A Python multi-language pipeline that adds prefixes to a given set of strings.
 
 This pipeline reads an input text file and adds two prefixes to every line read from the file.
@@ -50,49 +49,42 @@ from apache_beam.options.pipeline_options import PipelineOptions
 
 
 def run(input_path, output_path, expansion_service_port, pipeline_args):
-  pipeline_options = PipelineOptions(pipeline_args)
+    pipeline_options = PipelineOptions(pipeline_args)
 
-  with beam.Pipeline(options=pipeline_options) as p:
-    input = p | 'Read' >> ReadFromText(input_path).with_output_types(str)
+    with beam.Pipeline(options=pipeline_options) as p:
+        input = p | 'Read' >> ReadFromText(input_path).with_output_types(str)
 
-    java_output = (
-        input
-        | 'JavaPrefix' >> beam.ExternalTransform(
-              'beam:transform:org.apache.beam:javaprefix:v1',
-              ImplicitSchemaPayloadBuilder({'prefix': 'java:'}),
-              ('localhost:%s' % expansion_service_port)))
+        java_output = (input
+                       | 'JavaPrefix' >> beam.ExternalTransform(
+                           'beam:transform:org.apache.beam:javaprefix:v1',
+                           ImplicitSchemaPayloadBuilder({'prefix': 'java:'}),
+                           ('localhost:%s' % expansion_service_port)))
 
-    def python_prefix(record):
-      return 'python:%s' % record
+        def python_prefix(record):
+            return 'python:%s' % record
 
-    output = java_output | 'PythonPrefix' >> beam.Map(python_prefix)
-    output | 'Write' >> WriteToText(output_path)
+        output = java_output | 'PythonPrefix' >> beam.Map(python_prefix)
+        output | 'Write' >> WriteToText(output_path)
 
 
 if __name__ == '__main__':
-  logging.getLogger().setLevel(logging.INFO)
-  import argparse
+    logging.getLogger().setLevel(logging.INFO)
+    import argparse
 
-  parser = argparse.ArgumentParser()
-  parser.add_argument(
-      '--input',
-      dest='input',
-      required=True,
-      help='Input file')
-  parser.add_argument(
-      '--output',
-      dest='output',
-      required=True,
-      help='Output file')
-  parser.add_argument(
-      '--expansion_service_port',
-      dest='expansion_service_port',
-      required=True,
-      help='Expansion service port')
-  known_args, pipeline_args = parser.parse_known_args()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--input',
+                        dest='input',
+                        required=True,
+                        help='Input file')
+    parser.add_argument('--output',
+                        dest='output',
+                        required=True,
+                        help='Output file')
+    parser.add_argument('--expansion_service_port',
+                        dest='expansion_service_port',
+                        required=True,
+                        help='Expansion service port')
+    known_args, pipeline_args = parser.parse_known_args()
 
-  run(
-      known_args.input,
-      known_args.output,
-      known_args.expansion_service_port,
-      pipeline_args)
+    run(known_args.input, known_args.output, known_args.expansion_service_port,
+        pipeline_args)

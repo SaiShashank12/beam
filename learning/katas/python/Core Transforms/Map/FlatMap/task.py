@@ -31,6 +31,6 @@ import apache_beam as beam
 
 with beam.Pipeline() as p:
 
-  (p | beam.Create(['Apache Beam', 'Unified Batch and Streaming'])
+    (p | beam.Create(['Apache Beam', 'Unified Batch and Streaming'])
      | beam.FlatMap(lambda sentence: sentence.split())
      | beam.LogElements())

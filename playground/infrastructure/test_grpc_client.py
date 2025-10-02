@@ -39,22 +39,24 @@ def mock_check_status(mocker):
 @pytest.fixture()
 def mock_get_run_error(mocker):
     async_mock = AsyncMock(return_value="MOCK_ERROR")
-    mocker.patch("grpc_client.GRPCClient.get_run_error", side_effect=async_mock)
+    mocker.patch("grpc_client.GRPCClient.get_run_error",
+                 side_effect=async_mock)
     return async_mock
 
 
 @pytest.fixture()
 def mock_get_run_output(mocker):
     async_mock = AsyncMock(return_value="MOCK_RUN_OUTPUT")
-    mocker.patch("grpc_client.GRPCClient.get_run_output", side_effect=async_mock)
+    mocker.patch("grpc_client.GRPCClient.get_run_output",
+                 side_effect=async_mock)
     return async_mock
 
 
 @pytest.fixture()
 def mock_get_compile_output(mocker):
     async_mock = AsyncMock(return_value="MOCK_COMPILE_OUTPUT")
-    mocker.patch(
-        "grpc_client.GRPCClient.get_compile_output", side_effect=async_mock)
+    mocker.patch("grpc_client.GRPCClient.get_compile_output",
+                 side_effect=async_mock)
     return async_mock
 
 

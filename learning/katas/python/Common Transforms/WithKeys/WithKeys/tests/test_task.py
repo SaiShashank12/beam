@@ -23,14 +23,20 @@ from test_helper import test_is_not_empty, get_file_output
 
 
 class TestCase(unittest.TestCase):
+
     def test_not_empty(self):
         self.assertTrue(test_is_not_empty(), 'The output is empty')
 
     def test_output(self):
         output = get_file_output(path='task.py')
 
-        answers = ["('a', 'apple')", "('b', 'banana')", "('c', 'cherry')",
-                   "('d', 'durian')", "('g', 'guava')", "('m', 'melon')"]
+        answers = [
+            "('a', 'apple')", "('b', 'banana')", "('c', 'cherry')",
+            "('d', 'durian')", "('g', 'guava')", "('m', 'melon')"
+        ]
 
         for num in answers:
-            self.assertIn(num, output, "Incorrect output. Convert into a KV by its first letter and itself.")
+            self.assertIn(
+                num, output,
+                "Incorrect output. Convert into a KV by its first letter and itself."
+            )

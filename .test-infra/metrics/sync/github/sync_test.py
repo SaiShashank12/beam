@@ -18,16 +18,18 @@ import ghutilities
 @ddt
 class GhutilitiesTestCase(unittest.TestCase):
 
-  @data(("sample text with mention @mention", ["mention"]),
-        ("Data without mention", []),
-        ("sample text with several mentions @first, @second @third", ["first", "second", "third"]))
-  def test_findMentions_finds_mentions_by_pattern(self, params):
-    input, expectedResult = params
-    result = ghutilities.findMentions(input)
-    self.assertEqual(expectedResult, result)
+    @data(("sample text with mention @mention", ["mention"]),
+          ("Data without mention", []),
+          ("sample text with several mentions @first, @second @third",
+           ["first", "second", "third"]))
+    def test_findMentions_finds_mentions_by_pattern(self, params):
+        input, expectedResult = params
+        result = ghutilities.findMentions(input)
+        self.assertEqual(expectedResult, result)
 
-  def test_findCommentReviewers(self):
-    result = "some tesxt \n body"
+    def test_findCommentReviewers(self):
+        result = "some tesxt \n body"
+
 
 if __name__ == '__main__':
-  unittest.main()
+    unittest.main()

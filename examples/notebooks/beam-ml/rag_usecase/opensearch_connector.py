@@ -38,7 +38,6 @@ logging.root.setLevel(logging.INFO)
 logger = logging.getLogger(__name__)
 
 __all__ = ['InsertDocInOpenSearch', 'InsertEmbeddingInOpenSearch']
-
 """This module implements IO classes to read document in Opensearch.
 
 
@@ -73,8 +72,7 @@ class InsertDocInOpenSearch(PTransform):
                  port: int,
                  username: Optional[str],
                  password: Optional[str],
-                 batch_size: int = 100
-                 ):
+                 batch_size: int = 100):
         """
         Args:
         host (str): The opensearch host
@@ -93,7 +91,9 @@ class InsertDocInOpenSearch(PTransform):
         self._batch_size = batch_size
 
         if not self.username or not self.password:
-            raise ValueError("Username and password are needed for connecting to Opensearch cluster.")
+            raise ValueError(
+                "Username and password are needed for connecting to Opensearch cluster."
+            )
 
     def expand(self, pcoll):
         return pcoll \
@@ -116,8 +116,7 @@ class _InsertDocOpenSearchFn(DoFn):
                  port: int,
                  username: str,
                  password: str,
-                 batch_size: int = 100
-                 ):
+                 batch_size: int = 100):
         self.host = host
         self.port = port
         self.username = username
@@ -143,7 +142,8 @@ class _InsertDocOpenSearchFn(DoFn):
         if self.batch_counter == 0:
             return
 
-        with _InsertDocOpenSearchSink(self.host, self.port, self.username, self.password) as sink:
+        with _InsertDocOpenSearchSink(self.host, self.port, self.username,
+                                      self.password) as sink:
             sink.write(self.batch)
             self.batch_counter = 0
             self.batch = list()
@@ -154,12 +154,7 @@ class _InsertDocOpenSearchSink(object):
     and write insertion logic in Opensearch
     """
 
-    def __init__(self,
-                 host: str,
-                 port: int,
-                 username: str,
-                 password: str
-                 ):
+    def __init__(self, host: str, port: int, username: str, password: str):
         self.host = host
         self.port = port
         self.username = username
@@ -200,6 +195,7 @@ class _InsertDocOpenSearchSink(object):
         if self.client is not None:
             self.client.close()
 
+
 """This module implements IO classes to read text Embeddings in Opensearch.
 Insert Embedding in Opensearch :
 -----------------
@@ -231,8 +227,7 @@ class InsertEmbeddingInOpenSearch(PTransform):
                  username: Optional[str],
                  password: Optional[str],
                  batch_size: int = 100,
-                 embedded_columns: list = []
-                 ):
+                 embedded_columns: list = []):
         """
         Args:
         host (str): The Opensearch host
@@ -253,7 +248,9 @@ class InsertEmbeddingInOpenSearch(PTransform):
         self.embedded_columns = embedded_columns
 
         if not self.username or not self.password:
-            raise ValueError("Username and password are needed for connecting to Opensearch cluster.")
+            raise ValueError(
+                "Username and password are needed for connecting to Opensearch cluster."
+            )
 
     def expand(self, pcoll):
         return pcoll \
@@ -301,7 +298,8 @@ class _WriteEmbeddingInOpenSearchFn(DoFn):
         if self.batch_counter == 0:
             return
 
-        with _InsertEmbeddingInOpenSearchSink(self.host, self.port, self.username, self.password,
+        with _InsertEmbeddingInOpenSearchSink(self.host, self.port,
+                                              self.username, self.password,
                                               self.embedded_columns) as sink:
             sink.write(self.batch)
 
@@ -314,7 +312,8 @@ class _InsertEmbeddingInOpenSearchSink(object):
     and write text embedding  in Opensearch DB
     """
 
-    def __init__(self, host: str,
+    def __init__(self,
+                 host: str,
                  port: int,
                  username: str,
                  password: str,
@@ -331,13 +330,13 @@ class _InsertEmbeddingInOpenSearchSink(object):
             http_auth = [self.username, self.password]
             self.client = OpenSearch(hosts=[f'{self.host}:{self.port}'],
                                      http_auth=http_auth,
-                                     verify_certs=False
-                                     )
+                                     verify_certs=False)
 
     def write(self, elements):
         self._create_client()
         documents = []
-        logger.info(f'Insert Embeddings in opensearch DB, count={len(elements)}')
+        logger.info(
+            f'Insert Embeddings in opensearch DB, count={len(elements)}')
         for element in elements:
             doc_update = {
                 "url": element["url"],
@@ -360,7 +359,9 @@ class _InsertEmbeddingInOpenSearchSink(object):
         if response.get('errors'):
             for item in response['items']:
                 if 'error' in item['update']:
-                    logger.error(f"Failed to update document ID {item['update']['_id']}: {item['update']['error']}")
+                    logger.error(
+                        f"Failed to update document ID {item['update']['_id']}: {item['update']['error']}"
+                    )
         logger.info(f'Insert Embeddings done')
 
     def __enter__(self):

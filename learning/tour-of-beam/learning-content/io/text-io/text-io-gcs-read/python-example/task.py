@@ -27,12 +27,15 @@
 
 import apache_beam as beam
 
+
 def print_words(line):
     for word in line.split():
-      print(word)
+        print(word)
+
 
 p = beam.Pipeline()
-input = p | 'ReadMyFile' >> beam.io.ReadFromText('gs://apache-beam-samples/shakespeare/kinglear.txt')
+input = p | 'ReadMyFile' >> beam.io.ReadFromText(
+    'gs://apache-beam-samples/shakespeare/kinglear.txt')
 
 input | 'Print words' >> beam.Map(print_words)
 

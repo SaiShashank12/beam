@@ -35,7 +35,9 @@ from apache_beam.transforms.combiners import CountCombineFn
 
 
 class Transaction:
-    def __init__(self, transaction_no, date, product_no, product_name, price, quantity, customer_no, country):
+
+    def __init__(self, transaction_no, date, product_no, product_name, price,
+                 quantity, customer_no, country):
         self.transaction_no = transaction_no
         self.date = date
         self.product_no = product_no
@@ -51,8 +53,9 @@ class Transaction:
 
 def run():
     with beam.Pipeline() as pipeline:
-      transactions = (pipeline
-                        | 'Read from text file' >> beam.io.ReadFromText('input.csv'))
+        transactions = (
+            pipeline
+            | 'Read from text file' >> beam.io.ReadFromText('input.csv'))
 
 
 if __name__ == '__main__':

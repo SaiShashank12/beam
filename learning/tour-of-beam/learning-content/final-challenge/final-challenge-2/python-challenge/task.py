@@ -36,12 +36,15 @@ from apache_beam.transforms.combiners import CountCombineFn
 
 
 class SplitWords(beam.DoFn):
+
     def process(self, element):
         return element.lower().split(" ")
 
 
 class Analysis:
-    def __init__(self, word, negative, positive, uncertainty, litigious, strong, weak, constraining):
+
+    def __init__(self, word, negative, positive, uncertainty, litigious,
+                 strong, weak, constraining):
         self.word = word
         self.negative = negative
         self.positive = positive
@@ -52,17 +55,22 @@ class Analysis:
         self.constraining = constraining
 
     def __str__(self):
-        return (f'Analysis(word={self.word}, negative={self.negative}, positive={self.positive}, '
-                f'uncertainty={self.uncertainty}, litigious={self.litigious}, strong={self.strong}, '
-                f'weak={self.weak}, constraining={self.constraining})')
+        return (
+            f'Analysis(word={self.word}, negative={self.negative}, positive={self.positive}, '
+            f'uncertainty={self.uncertainty}, litigious={self.litigious}, strong={self.strong}, '
+            f'weak={self.weak}, constraining={self.constraining})')
+
 
 def run():
     pipeline_options = PipelineOptions()
     with beam.Pipeline(options=pipeline_options) as p:
-      shakespeare = (p
-                       | 'Read from text file' >> ReadFromText('gs://apache-beam-samples/shakespeare/kinglear.txt')
-                       | 'Split into words' >> beam.ParDo(SplitWords())
-                       | 'Filter empty words' >> beam.Filter(bool))
+        shakespeare = (
+            p
+            | 'Read from text file' >>
+            ReadFromText('gs://apache-beam-samples/shakespeare/kinglear.txt')
+            | 'Split into words' >> beam.ParDo(SplitWords())
+            | 'Filter empty words' >> beam.Filter(bool))
+
 
 if __name__ == "__main__":
     run()

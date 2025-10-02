@@ -25,11 +25,8 @@ from apache_beam.transforms import DoFn
 from apache_beam.transforms import PTransform
 from enum import Enum
 
+__all__ = ['ChunksGeneration', 'ChunkingStrategy']
 
-__all__ = [
-    'ChunksGeneration',
-    'ChunkingStrategy'
-]
 
 class ChunkingStrategy(Enum):
     SPLIT_BY_CHARACTER = 0
@@ -42,12 +39,8 @@ class ChunksGeneration(PTransform):
     key, value tuple or 2-element array and generates different chunks for documents.
     """
 
-    def __init__(
-            self,
-            chunk_size: int,
-            chunk_overlap: int,
-            chunking_strategy: ChunkingStrategy
-    ):
+    def __init__(self, chunk_size: int, chunk_overlap: int,
+                 chunking_strategy: ChunkingStrategy):
         """
 
         Args:
@@ -76,12 +69,8 @@ class _GenerateChunksFn(DoFn):
     and generate chunks.
     """
 
-    def __init__(
-            self,
-            chunk_size: int,
-            chunk_overlap: int,
-            chunking_strategy: ChunkingStrategy
-    ):
+    def __init__(self, chunk_size: int, chunk_overlap: int,
+                 chunking_strategy: ChunkingStrategy):
 
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
@@ -111,11 +100,11 @@ class _GenerateChunksFn(DoFn):
         elif self.chunking_strategy == ChunkingStrategy.SPLIT_BY_TOKENS:
             text_splitter = SentenceTransformersTokenTextSplitter(
                 chunk_overlap=self.chunk_overlap,
-                model_name='all-MiniLM-L6-v2'
-            )
+                model_name='all-MiniLM-L6-v2')
 
         else:
-            raise ValueError(f"Invalid chunking strategy: {self.chunking_strategy}")
+            raise ValueError(
+                f"Invalid chunking strategy: {self.chunking_strategy}")
 
         texts = text_splitter.split_text(element['text'])[:]
 
@@ -125,5 +114,3 @@ class _GenerateChunksFn(DoFn):
             element_copy['text'] = section
             element_copy['section_id'] = i + 1
             yield element_copy
-
-

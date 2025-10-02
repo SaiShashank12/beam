@@ -27,7 +27,6 @@
 #   tags:
 #     - hellobeam
 
-
 import apache_beam as beam
 import logging
 import re
@@ -36,7 +35,9 @@ from apache_beam.transforms.combiners import CountCombineFn
 
 
 class Transaction:
-    def __init__(self, transaction_no, date, product_no, product_name, price, quantity, customer_no, country):
+
+    def __init__(self, transaction_no, date, product_no, product_name, price,
+                 quantity, customer_no, country):
         self.transaction_no = transaction_no
         self.date = date
         self.product_no = product_no
@@ -51,10 +52,12 @@ class Transaction:
 
 
 class ExtractDataFn(beam.DoFn):
+
     def process(self, element):
         items = re.split(r',(?=(?:[^"]*"[^"]*")*[^"]*$)', element)
         if items[0] != 'TransactionNo':
-            yield Transaction(items[0], items[1], items[2], items[3], items[4], items[5], items[6], items[7])
+            yield Transaction(items[0], items[1], items[2], items[3], items[4],
+                              items[5], items[6], items[7])
 
 
 def partitionTransactions(element, num_partitions):
@@ -66,33 +69,48 @@ def partitionTransactions(element, num_partitions):
 
 def run():
     with beam.Pipeline() as pipeline:
-      transactions = (pipeline
-                        | 'Read from text file' >> beam.io.ReadFromText('input.csv')
-                        | 'Extract Data' >> beam.ParDo(ExtractDataFn())
-                        )
+        transactions = (
+            pipeline
+            | 'Read from text file' >> beam.io.ReadFromText('input.csv')
+            | 'Extract Data' >> beam.ParDo(ExtractDataFn()))
 
-      windowed_transactions = (transactions
-                                 | 'Window' >> beam.WindowInto(window.FixedWindows(30), trigger=trigger.AfterWatermark(
-                    early=trigger.AfterProcessingTime(5).has_ontime_pane(), late=trigger.AfterAll()),
-                                                               allowed_lateness=30,
-                                                               accumulation_mode=trigger.AccumulationMode.DISCARDING))
+        windowed_transactions = (
+            transactions
+            | 'Window' >> beam.WindowInto(
+                window.FixedWindows(30),
+                trigger=trigger.AfterWatermark(
+                    early=trigger.AfterProcessingTime(5).has_ontime_pane(),
+                    late=trigger.AfterAll()),
+                allowed_lateness=30,
+                accumulation_mode=trigger.AccumulationMode.DISCARDING))
 
-      partition = (windowed_transactions
-                     | 'Filtering' >> beam.Filter(lambda t: int(t.quantity) >= 20)
-                     | 'Partition transactions' >> beam.Partition(partitionTransactions, 2))
+        partition = (
+            windowed_transactions
+            | 'Filtering' >> beam.Filter(lambda t: int(t.quantity) >= 20)
+            | 'Partition transactions' >> beam.Partition(
+                partitionTransactions, 2))
 
-      biggerThan10 = partition[0]
-      smallerThan10 = partition[1]
+        biggerThan10 = partition[0]
+        smallerThan10 = partition[1]
 
-      (biggerThan10
-         | 'Map product_no and price for bigger' >> beam.Map(lambda transaction: (transaction.product_no, float(transaction.price)))
+        (biggerThan10
+         | 'Map product_no and price for bigger' >>
+         beam.Map(lambda transaction:
+                  (transaction.product_no, float(transaction.price)))
          | 'Calculate sum for price more than 10' >> beam.CombinePerKey(sum)
-         | 'Write price more than 10 results to text file' >> beam.io.WriteToText('price_more_than_10', '.txt', shard_name_template=''))
+         | 'Write price more than 10 results to text file' >>
+         beam.io.WriteToText(
+             'price_more_than_10', '.txt', shard_name_template=''))
 
-      (smallerThan10
-         | 'Map product_no and price for smaller' >> beam.Map(lambda transaction: (transaction.product_no, float(transaction.price)))
+        (smallerThan10
+         | 'Map product_no and price for smaller' >>
+         beam.Map(lambda transaction:
+                  (transaction.product_no, float(transaction.price)))
          | 'Calculate sum for price less than 10' >> beam.CombinePerKey(sum)
-         | 'Write price less than 10 results to text file' >> beam.io.WriteToText('price_less_than_10', '.txt', shard_name_template=''))
+         | 'Write price less than 10 results to text file' >>
+         beam.io.WriteToText(
+             'price_less_than_10', '.txt', shard_name_template=''))
+
 
 if __name__ == '__main__':
     logging.getLogger().setLevel(logging.INFO)

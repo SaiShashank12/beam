@@ -27,22 +27,26 @@
 
 import apache_beam as beam
 
+
 # Output PCollection
 class Output(beam.PTransform):
+
     class _OutputFn(beam.DoFn):
+
         def __init__(self, prefix=''):
             super().__init__()
             self.prefix = prefix
 
         def process(self, element):
-            print(self.prefix+str(element))
+            print(self.prefix + str(element))
 
-    def __init__(self, label=None,prefix=''):
+    def __init__(self, label=None, prefix=''):
         super().__init__(label)
         self.prefix = prefix
 
     def expand(self, input):
         input | beam.ParDo(self._OutputFn(self.prefix))
+
 
 def partition_fn(number, num_partitions):
     if number > 100:
@@ -52,9 +56,10 @@ def partition_fn(number, num_partitions):
 
 
 with beam.Pipeline() as p:
-  results = (p | beam.Create([1, 2, 3, 4, 5, 100, 110, 150, 250])
+    results = (
+        p | beam.Create([1, 2, 3, 4, 5, 100, 110, 150, 250])
         # Accepts PCollection and returns the PCollection array
-         | beam.Partition(partition_fn, 2))
+        | beam.Partition(partition_fn, 2))
 
-  results[0] | 'Log numbers > 100' >> Output(prefix='Number > 100: ')
-  results[1] | 'Log numbers <= 100' >> Output(prefix='Number <= 100: ')
+    results[0] | 'Log numbers > 100' >> Output(prefix='Number > 100: ')
+    results[1] | 'Log numbers <= 100' >> Output(prefix='Number <= 100: ')

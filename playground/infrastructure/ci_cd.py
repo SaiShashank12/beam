@@ -12,7 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """
 Module implements CI/CD steps for Beam Playground examples
 """
@@ -36,7 +35,8 @@ from helper import (
 )
 from logger import setup_logger
 
-parser = argparse.ArgumentParser(description="CI/CD Steps for Playground objects")
+parser = argparse.ArgumentParser(
+    description="CI/CD Steps for Playground objects")
 parser.add_argument(
     "--step",
     dest="step",
@@ -48,15 +48,14 @@ parser.add_argument(
 parser.add_argument(
     "--namespace",
     dest="namespace",
-    help=f"Datastore namespace to use when saving data (default: {Config.DEFAULT_NAMESPACE})",
-    default=Config.DEFAULT_NAMESPACE
-)
+    help=
+    f"Datastore namespace to use when saving data (default: {Config.DEFAULT_NAMESPACE})",
+    default=Config.DEFAULT_NAMESPACE)
 parser.add_argument(
     "--datastore-project",
     dest="datastore_project",
     help="Datastore project to use when saving data (CD step only)",
-    default=None
-)
+    default=None)
 parser.add_argument(
     "--sdk",
     dest="sdk",
@@ -69,7 +68,10 @@ parser.add_argument(
     type=Origin,
     required=True,
     help="ORIGIN field of pg_examples/pg_snippets",
-    choices=[o.value for o in [Origin.PG_EXAMPLES, Origin.PG_BEAMDOC, Origin.TB_EXAMPLES]],
+    choices=[
+        o.value
+        for o in [Origin.PG_EXAMPLES, Origin.PG_BEAMDOC, Origin.TB_EXAMPLES]
+    ],
 )
 parser.add_argument(
     "--subdirs",
@@ -85,14 +87,16 @@ categories_file = os.getenv(BEAM_EXAMPLE_CATEGORIES_ENV_VAR_KEY)
 
 def _check_envs():
     if root_dir is None:
-        raise KeyError("BEAM_ROOT_DIR environment variable should be specified in os")
+        raise KeyError(
+            "BEAM_ROOT_DIR environment variable should be specified in os")
     if categories_file is None:
         raise KeyError(
             "BEAM_EXAMPLE_CATEGORIES environment variable should be specified in os"
         )
 
 
-def _run_ci_cd(step: str, raw_sdk: str, origin: Origin, project: str, namespace: str, subdirs: List[str]):
+def _run_ci_cd(step: str, raw_sdk: str, origin: Origin, project: str,
+               namespace: str, subdirs: List[str]):
     sdk: SdkEnum = StringToSdkEnum(raw_sdk)
 
     load_supported_categories(categories_file)
@@ -108,17 +112,22 @@ def _run_ci_cd(step: str, raw_sdk: str, origin: Origin, project: str, namespace:
     runner.run_verify(examples)
 
     if step == Config.CD_STEP_NAME:
-        logging.info("Start of sending Playground examples to the Cloud Datastore ...")
+        logging.info(
+            "Start of sending Playground examples to the Cloud Datastore ...")
         datastore_client = DatastoreClient(project, namespace)
         datastore_client.save_catalogs()
         datastore_client.save_to_cloud_datastore(examples, sdk, origin)
-        logging.info("Finish of sending Playground examples to the Cloud Datastore")
+        logging.info(
+            "Finish of sending Playground examples to the Cloud Datastore")
 
 
 if __name__ == "__main__":
     args = parser.parse_args()
     if args.step == Config.CD_STEP_NAME and args.datastore_project is None:
-        parser.error(f"--datastore-project is required when --step {Config.CD_STEP_NAME} is selected")
+        parser.error(
+            f"--datastore-project is required when --step {Config.CD_STEP_NAME} is selected"
+        )
     _check_envs()
     setup_logger()
-    _run_ci_cd(args.step, args.sdk, args.origin, args.datastore_project, args.namespace, args.subdirs)
+    _run_ci_cd(args.step, args.sdk, args.origin, args.datastore_project,
+               args.namespace, args.subdirs)

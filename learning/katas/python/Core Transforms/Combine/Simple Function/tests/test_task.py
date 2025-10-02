@@ -23,6 +23,7 @@ from test_helper import test_is_not_empty, get_file_output
 
 
 class TestCase(unittest.TestCase):
+
     def test_not_empty(self):
         self.assertTrue(test_is_not_empty(), 'The output is empty')
 
@@ -30,4 +31,6 @@ class TestCase(unittest.TestCase):
         output = get_file_output(path='task.py')
 
         answer = '15'
-        self.assertIn(answer, output, "Incorrect output. Sum all the numbers with a simple function.")
+        self.assertIn(
+            answer, output,
+            "Incorrect output. Sum all the numbers with a simple function.")

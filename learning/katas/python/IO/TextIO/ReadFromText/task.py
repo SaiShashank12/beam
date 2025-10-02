@@ -29,12 +29,12 @@
 #     - map
 #     - strings
 
-
 import apache_beam as beam
 
 with beam.Pipeline() as p:
 
-  file_path = 'countries.txt'
+    file_path = 'countries.txt'
 
-  (p | beam.io.ReadFromText(file_path) | beam.Map(lambda country: country.upper())
+    (p | beam.io.ReadFromText(file_path)
+     | beam.Map(lambda country: country.upper())
      | beam.LogElements())

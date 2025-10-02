@@ -61,18 +61,16 @@ async def test__verify_examples(create_test_example):
     ]
     client = mock.AsyncMock()
     with pytest.raises(VerifyException):
-        await verifier._verify_examples(
-            client, examples_with_errors, Origin.PG_EXAMPLES
-        )
+        await verifier._verify_examples(client, examples_with_errors,
+                                        Origin.PG_EXAMPLES)
     with pytest.raises(VerifyException):
-        await verifier._verify_examples(
-            client, examples_without_def_ex, Origin.PG_EXAMPLES
-        )
+        await verifier._verify_examples(client, examples_without_def_ex,
+                                        Origin.PG_EXAMPLES)
     with pytest.raises(VerifyException):
-        await verifier._verify_examples(
-            client, examples_with_several_def_ex, Origin.PG_EXAMPLES
-        )
-    await verifier._verify_examples(client, examples_without_errors, Origin.PG_EXAMPLES)
+        await verifier._verify_examples(client, examples_with_several_def_ex,
+                                        Origin.PG_EXAMPLES)
+    await verifier._verify_examples(client, examples_without_errors,
+                                    Origin.PG_EXAMPLES)
 
 
 @pytest.mark.asyncio

@@ -23,6 +23,7 @@ from test_helper import test_is_not_empty, get_file_output
 
 
 class TestCase(unittest.TestCase):
+
     def test_not_empty(self):
         self.assertTrue(test_is_not_empty(), 'The output is empty')
 
@@ -33,7 +34,11 @@ class TestCase(unittest.TestCase):
         PLAYER_2 = 'Player 2'
         PLAYER_3 = 'Player 3'
 
-        answers = [str((PLAYER_1, 115)), str((PLAYER_2, 85)), str((PLAYER_3, 25))]
+        answers = [
+            str((PLAYER_1, 115)),
+            str((PLAYER_2, 85)),
+            str((PLAYER_3, 25))
+        ]
 
         for ans in answers:
             self.assertIn(ans, output, "Sum all the scores per player.")

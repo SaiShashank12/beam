@@ -26,22 +26,26 @@ import apache_beam as beam
 #   tags:
 #     - hellobeam
 
+
 # Output PCollection
 class Output(beam.PTransform):
+
     class _OutputFn(beam.DoFn):
+
         def __init__(self, prefix=''):
             super().__init__()
             self.prefix = prefix
 
         def process(self, element):
-            print(self.prefix+str(element))
+            print(self.prefix + str(element))
 
-    def __init__(self, label=None,prefix=''):
+    def __init__(self, label=None, prefix=''):
         super().__init__(label)
         self.prefix = prefix
 
     def expand(self, input):
         input | beam.ParDo(self._OutputFn(self.prefix))
+
 
 class AverageFn(beam.CombineFn):
 
@@ -62,6 +66,6 @@ class AverageFn(beam.CombineFn):
 
 
 with beam.Pipeline() as p:
-  (p | beam.Create([10, 20, 50, 70, 90])
+    (p | beam.Create([10, 20, 50, 70, 90])
      | beam.CombineGlobally(AverageFn())
      | Output())

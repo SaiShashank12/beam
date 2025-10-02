@@ -35,12 +35,15 @@ from apache_beam.transforms.combiners import CountCombineFn
 
 
 class SplitWords(beam.DoFn):
+
     def process(self, element):
         return element.lower().split(" ")
 
 
 class Analysis:
-    def __init__(self, word, negative, positive, uncertainty, litigious, strong, weak, constraining):
+
+    def __init__(self, word, negative, positive, uncertainty, litigious,
+                 strong, weak, constraining):
         self.word = word
         self.negative = negative
         self.positive = positive
@@ -51,19 +54,23 @@ class Analysis:
         self.constraining = constraining
 
     def __str__(self):
-        return (f'Analysis(word={self.word}, negative={self.negative}, positive={self.positive}, '
-                f'uncertainty={self.uncertainty}, litigious={self.litigious}, strong={self.strong}, '
-                f'weak={self.weak}, constraining={self.constraining})')
+        return (
+            f'Analysis(word={self.word}, negative={self.negative}, positive={self.positive}, '
+            f'uncertainty={self.uncertainty}, litigious={self.litigious}, strong={self.strong}, '
+            f'weak={self.weak}, constraining={self.constraining})')
 
 
 class ExtractAnalysis(beam.DoFn):
+
     def process(self, element):
         items = re.split(r',(?=(?:[^"]*"[^"]*")*[^"]*$)', element)
         if items[1] != 'Negative':
-            yield Analysis(items[0].lower(), items[1], items[2], items[3], items[4], items[5], items[6], items[7])
+            yield Analysis(items[0].lower(), items[1], items[2], items[3],
+                           items[4], items[5], items[6], items[7])
 
 
 class Partition(beam.PTransform):
+
     def expand(self, pcoll):
         return pcoll | beam.Partition(self._analysis_partition_fn, 3)
 
@@ -78,6 +85,7 @@ class Partition(beam.PTransform):
 
 
 class LogOutput(beam.DoFn):
+
     def __init__(self, message):
         self.message = message
 
@@ -86,6 +94,7 @@ class LogOutput(beam.DoFn):
 
 
 class MatchWordDoFn(beam.DoFn):
+
     def process(self, element, analysis):
         for a in analysis:
             if a.word == element:
@@ -95,41 +104,53 @@ class MatchWordDoFn(beam.DoFn):
 def run():
     pipeline_options = PipelineOptions()
     with beam.Pipeline(options=pipeline_options) as p:
-      shakespeare = (p
-                       | 'Read from text file' >> ReadFromText('gs://apache-beam-samples/shakespeare/kinglear.txt')
-                       | 'Split into words' >> beam.ParDo(SplitWords())
-                       | 'Filter empty words' >> beam.Filter(bool))
+        shakespeare = (
+            p
+            | 'Read from text file' >>
+            ReadFromText('gs://apache-beam-samples/shakespeare/kinglear.txt')
+            | 'Split into words' >> beam.ParDo(SplitWords())
+            | 'Filter empty words' >> beam.Filter(bool))
 
-      analysis = (p
+        analysis = (p
                     | 'Read from csv file' >> ReadFromText('analysis.csv')
                     | 'Extract Analysis' >> beam.ParDo(ExtractAnalysis()))
 
-      matches = shakespeare | beam.ParDo(MatchWordDoFn(), beam.pvalue.AsList(analysis))
+        matches = shakespeare | beam.ParDo(MatchWordDoFn(),
+                                           beam.pvalue.AsList(analysis))
 
-      result = matches | Partition()
+        result = matches | Partition()
 
-      positive_words = result[0]
-      negative_words = result[1]
+        positive_words = result[0]
+        negative_words = result[1]
 
-      (positive_words
-         | 'Count Positive Words' >> beam.CombineGlobally(CountCombineFn()).without_defaults()
-         | 'Log Positive Words' >> beam.ParDo(LogOutput('Positive word count')))
+        (positive_words
+         | 'Count Positive Words' >> beam.CombineGlobally(
+             CountCombineFn()).without_defaults()
+         |
+         'Log Positive Words' >> beam.ParDo(LogOutput('Positive word count')))
 
-      (positive_words
+        (positive_words
          | 'Filter Strong or Weak Positive Words' >> beam.Filter(
-                    lambda analysis: analysis.strong != '0' or analysis.weak != '0')
-         | 'Count Strong or Weak Positive Words' >> beam.CombineGlobally(CountCombineFn()).without_defaults()
-         | 'Log Strong or Weak Positive Words' >> beam.ParDo(LogOutput('Positive words with enhanced effect count')))
+             lambda analysis: analysis.strong != '0' or analysis.weak != '0')
+         | 'Count Strong or Weak Positive Words' >> beam.CombineGlobally(
+             CountCombineFn()).without_defaults()
+         | 'Log Strong or Weak Positive Words' >> beam.ParDo(
+             LogOutput('Positive words with enhanced effect count')))
 
-      (negative_words
-         | 'Count Negative Words' >> beam.CombineGlobally(CountCombineFn()).without_defaults()
-         | 'Log Negative Words' >> beam.ParDo(LogOutput('Negative word count')))
+        (negative_words
+         | 'Count Negative Words' >> beam.CombineGlobally(
+             CountCombineFn()).without_defaults()
+         |
+         'Log Negative Words' >> beam.ParDo(LogOutput('Negative word count')))
 
-      (negative_words
+        (negative_words
          | 'Filter Strong or Weak Negative Words' >> beam.Filter(
-                    lambda analysis: analysis.strong != '0' or analysis.weak != '0')
-         | 'Count Strong or Weak Negative Words' >> beam.CombineGlobally(CountCombineFn()).without_defaults()
-         | 'Log Strong or Weak Negative Words' >> beam.ParDo(LogOutput('Negative words with enhanced effect count')))
+             lambda analysis: analysis.strong != '0' or analysis.weak != '0')
+         | 'Count Strong or Weak Negative Words' >> beam.CombineGlobally(
+             CountCombineFn()).without_defaults()
+         | 'Log Strong or Weak Negative Words' >> beam.ParDo(
+             LogOutput('Negative words with enhanced effect count')))
+
 
 if __name__ == "__main__":
     run()

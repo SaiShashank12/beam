@@ -26,17 +26,20 @@
 #     - hellobeam
 import apache_beam as beam
 
+
 # Output PCollection
 class Output(beam.PTransform):
+
     class _OutputFn(beam.DoFn):
+
         def __init__(self, prefix=''):
             super().__init__()
             self.prefix = prefix
 
         def process(self, element):
-            print(self.prefix+str(element))
+            print(self.prefix + str(element))
 
-    def __init__(self, label=None,prefix=''):
+    def __init__(self, label=None, prefix=''):
         super().__init__(label)
         self.prefix = prefix
 
@@ -45,7 +48,7 @@ class Output(beam.PTransform):
 
 
 with beam.Pipeline() as p:
-  (p | beam.Create(['Apache Beam', 'Unified Batch and Streaming'])
-    # Lambda function that returns a list of words from a sentence
+    (p | beam.Create(['Apache Beam', 'Unified Batch and Streaming'])
+     # Lambda function that returns a list of words from a sentence
      | beam.FlatMap(lambda sentence: sentence.split())
      | Output())

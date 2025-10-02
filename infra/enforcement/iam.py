@@ -26,6 +26,7 @@ from sending import SendingClient
 
 CONFIG_FILE = "config.yml"
 
+
 class IAMPolicyComplianceChecker:
 
     def is_project_service_account_email(self, email: Optional[str]) -> bool:
@@ -36,7 +37,11 @@ class IAMPolicyComplianceChecker:
             return self.project_id in email
         return True
 
-    def __init__(self, project_id: str, users_file: str, logger: logging.Logger, sending_client: Optional[SendingClient] = None):
+    def __init__(self,
+                 project_id: str,
+                 users_file: str,
+                 logger: logging.Logger,
+                 sending_client: Optional[SendingClient] = None):
         self.project_id = project_id
         self.users_file = users_file
         self.client = resourcemanager_v3.ProjectsClient()
@@ -83,16 +88,21 @@ class IAMPolicyComplianceChecker:
         """
 
         try:
-            policy = self.client.get_iam_policy(resource=f"projects/{self.project_id}")
-            self.logger.debug(f"Retrieved IAM policy for project {self.project_id}")
+            policy = self.client.get_iam_policy(
+                resource=f"projects/{self.project_id}")
+            self.logger.debug(
+                f"Retrieved IAM policy for project {self.project_id}")
         except exceptions.NotFound as e:
             self.logger.error(f"Project {self.project_id} not found: {e}")
             raise
         except exceptions.PermissionDenied as e:
-            self.logger.error(f"Permission denied for project {self.project_id}: {e}")
+            self.logger.error(
+                f"Permission denied for project {self.project_id}: {e}")
             raise
         except Exception as e:
-            self.logger.error(f"An error occurred while retrieving IAM policy for project {self.project_id}: {e}")
+            self.logger.error(
+                f"An error occurred while retrieving IAM policy for project {self.project_id}: {e}"
+            )
             raise
 
         members_data = {}
@@ -102,13 +112,19 @@ class IAMPolicyComplianceChecker:
 
             for member_str in binding.members:
                 if member_str not in members_data:
-                    username, email_address, member_type = self._parse_member(member_str)
+                    username, email_address, member_type = self._parse_member(
+                        member_str)
                     # Skip service accounts not matching the project_id
-                    if member_type == "serviceAccount" and not self.is_project_service_account_email(email_address):
-                        self.logger.debug(f"Skipping service account not matching project_id ({self.project_id}): {email_address}")
+                    if member_type == "serviceAccount" and not self.is_project_service_account_email(
+                            email_address):
+                        self.logger.debug(
+                            f"Skipping service account not matching project_id ({self.project_id}): {email_address}"
+                        )
                         continue
                     if member_type == "unknown":
-                        self.logger.warning(f"Skipping member {member_str} with no email address")
+                        self.logger.warning(
+                            f"Skipping member {member_str} with no email address"
+                        )
                         continue  # Skip if no email address is found, probably a malformed member
                     members_data[member_str] = {
                         "username": username,
@@ -123,11 +139,13 @@ class IAMPolicyComplianceChecker:
                 permission_entry = {}
                 permission_entry["role"] = role
 
-                members_data[member_str]["permissions"].append(permission_entry)
+                members_data[member_str]["permissions"].append(
+                    permission_entry)
 
         output_list = []
         for data in members_data.values():
-            data["permissions"] = sorted(data["permissions"], key=lambda p: p["role"])
+            data["permissions"] = sorted(data["permissions"],
+                                         key=lambda p: p["role"])
             output_list.append({
                 "username": data["username"],
                 "email": data["email"],
@@ -147,17 +165,24 @@ class IAMPolicyComplianceChecker:
             with open(self.users_file, "r") as file:
                 iam_policy = yaml.safe_load(file)
 
-
-                self.logger.debug(f"Retrieved IAM policy from file for project {self.project_id}")
+                self.logger.debug(
+                    f"Retrieved IAM policy from file for project {self.project_id}"
+                )
                 return iam_policy
         except FileNotFoundError:
-            self.logger.error(f"IAM policy file not found for project {self.project_id}")
+            self.logger.error(
+                f"IAM policy file not found for project {self.project_id}")
             return []
         except Exception as e:
-            self.logger.error(f"An error occurred while reading IAM policy file for project {self.project_id}: {e}")
+            self.logger.error(
+                f"An error occurred while reading IAM policy file for project {self.project_id}: {e}"
+            )
             return []
 
-    def _to_yaml_file(self, data: List[Dict], output_file: str, header_info: str = "") -> None:
+    def _to_yaml_file(self,
+                      data: List[Dict],
+                      output_file: str,
+                      header_info: str = "") -> None:
         """
         Writes a list of dictionaries to a YAML file.
         Include the apache license header on the files
@@ -190,12 +215,17 @@ class IAMPolicyComplianceChecker:
         try:
             with open(output_file, "w") as file:
                 file.write(header)
-                yaml.dump(data, file, sort_keys=False, default_flow_style=False, indent=2)
-            self.logger.info(f"Successfully wrote IAM policy data to {output_file}")
+                yaml.dump(data,
+                          file,
+                          sort_keys=False,
+                          default_flow_style=False,
+                          indent=2)
+            self.logger.info(
+                f"Successfully wrote IAM policy data to {output_file}")
         except IOError as e:
             self.logger.error(f"Failed to write to {output_file}: {e}")
             raise
-        
+
     def check_compliance(self) -> List[str]:
         """
         Checks the compliance of the IAM policy against the defined policies.
@@ -204,15 +234,23 @@ class IAMPolicyComplianceChecker:
             A list of strings describing any compliance issues found.
         """
 
-        current_users = {user['email']: user for user in self._export_project_iam() if self.is_project_service_account_email(user.get('email'))}
-        existing_users = {user['email']: user for user in self._read_project_iam_file() if self.is_project_service_account_email(user.get('email'))}
+        current_users = {
+            user['email']: user
+            for user in self._export_project_iam()
+            if self.is_project_service_account_email(user.get('email'))
+        }
+        existing_users = {
+            user['email']: user
+            for user in self._read_project_iam_file()
+            if self.is_project_service_account_email(user.get('email'))
+        }
 
         if not existing_users:
             error_msg = f"No IAM policy found in the {self.users_file}."
             self.logger.info(error_msg)
             raise RuntimeError(error_msg)
 
-        differences = []        
+        differences = []
 
         all_emails = set(current_users.keys()) | set(existing_users.keys())
 
@@ -221,9 +259,11 @@ class IAMPolicyComplianceChecker:
             existing_user = existing_users.get(email)
 
             if current_user and not existing_user:
-                differences.append(f"User {email} not found in existing policy.")
+                differences.append(
+                    f"User {email} not found in existing policy.")
             elif not current_user and existing_user:
-                differences.append(f"User {email} found in policy file but not in GCP.")
+                differences.append(
+                    f"User {email} found in policy file but not in GCP.")
             elif current_user and existing_user:
                 if current_user["permissions"] != existing_user["permissions"]:
                     msg = f"\nPermissions for user {email} differ."
@@ -242,12 +282,14 @@ class IAMPolicyComplianceChecker:
             recipient (str): The email address of the announcement recipient.
         """
         if not self.sending_client:
-            raise ValueError("SendingClient is required for creating announcements")
-            
+            raise ValueError(
+                "SendingClient is required for creating announcements")
+
         diff = self.check_compliance()
 
         if not diff:
-            self.logger.info("No compliance issues found, no announcement will be created.")
+            self.logger.info(
+                "No compliance issues found, no announcement will be created.")
             return
 
         title = f"IAM Policy Non-Compliance Detected"
@@ -259,7 +301,8 @@ class IAMPolicyComplianceChecker:
         announcement += f"We found {len(diff)} compliance issue(s) that need your attention.\n"
         announcement += f"\nPlease check the GitHub issue for detailed information and take appropriate action to resolve these compliance violations."
 
-        self.sending_client.create_announcement(title, body, recipient, announcement)
+        self.sending_client.create_announcement(title, body, recipient,
+                                                announcement)
 
     def print_announcement(self, recipient: str) -> None:
         """
@@ -269,12 +312,14 @@ class IAMPolicyComplianceChecker:
             recipient (str): The email address of the announcement recipient.
         """
         if not self.sending_client:
-            raise ValueError("SendingClient is required for printing announcements")
-            
+            raise ValueError(
+                "SendingClient is required for printing announcements")
+
         diff = self.check_compliance()
 
         if not diff:
-            self.logger.info("No compliance issues found, no announcement will be printed.")
+            self.logger.info(
+                "No compliance issues found, no announcement will be printed.")
             return
 
         title = f"IAM Policy Non-Compliance Detected"
@@ -286,29 +331,33 @@ class IAMPolicyComplianceChecker:
         announcement += f"We found {len(diff)} compliance issue(s) that need your attention.\n"
         announcement += f"\nPlease check the GitHub issue for detailed information and take appropriate action to resolve these compliance violations."
 
-        self.sending_client.print_announcement(title, body, recipient, announcement)
-    
+        self.sending_client.print_announcement(title, body, recipient,
+                                               announcement)
+
     def generate_compliance(self) -> None:
         """
         Modifies the users file to match the current IAM policy.
         If no changes are needed, no file will be written.
         """
-        
+
         try:
             diff = self.check_compliance()
         except RuntimeError:
             self.logger.info("No existing IAM policy found.")
             diff = ["No existing policy found"]
 
-        if not diff or (len(diff) == 1 and "No existing policy found" not in diff[0]):
-            self.logger.info("No compliance issues found, no changes will be made.")
+        if not diff or (len(diff) == 1
+                        and "No existing policy found" not in diff[0]):
+            self.logger.info(
+                "No compliance issues found, no changes will be made.")
             return
 
         current_policy = self._export_project_iam()
         header_info = f"IAM policy for project {self.project_id}"
-        
+
         self._to_yaml_file(current_policy, self.users_file, header_info)
         self.logger.info(f"Generated new compliance file: {self.users_file}")
+
 
 def config_process() -> Dict[str, str]:
     with open(CONFIG_FILE, "r") as file:
@@ -316,12 +365,14 @@ def config_process() -> Dict[str, str]:
 
     if not config:
         raise ValueError("Configuration file is empty or invalid.")
-    
+
     config_res = dict()
 
     config_res["project_id"] = config.get("project_id", "apache-beam-testing")
-    config_res["logging_level"] = config.get("logging", {}).get("level", "INFO")
-    config_res["logging_format"] = config.get("logging", {}).get("format", "[%(asctime)s] %(levelname)s: %(message)s")
+    config_res["logging_level"] = config.get("logging",
+                                             {}).get("level", "INFO")
+    config_res["logging_format"] = config.get("logging", {}).get(
+        "format", "[%(asctime)s] %(levelname)s: %(message)s")
     config_res["users_file"] = config.get("users_file", "../iam/users.yml")
     config_res["action"] = config.get("action", "check")
 
@@ -336,11 +387,17 @@ def config_process() -> Dict[str, str]:
 
     return config_res
 
+
 def main():
     # Parse command line arguments
-    parser = argparse.ArgumentParser(description="IAM Policy Compliance Checker")
-    parser.add_argument("--action", choices=["check", "announce", "print", "generate"], 
-                       help="Action to perform: check compliance, create announcement, print announcement, or generate new compliance")
+    parser = argparse.ArgumentParser(
+        description="IAM Policy Compliance Checker")
+    parser.add_argument(
+        "--action",
+        choices=["check", "announce", "print", "generate"],
+        help=
+        "Action to perform: check compliance, create announcement, print announcement, or generate new compliance"
+    )
     args = parser.parse_args()
 
     config = config_process()
@@ -348,7 +405,8 @@ def main():
     # Command line argument takes precedence over config file
     action = args.action if args.action else config.get("action", "check")
 
-    logging.basicConfig(level=getattr(logging, config["logging_level"].upper(), logging.INFO),
+    logging.basicConfig(level=getattr(logging, config["logging_level"].upper(),
+                                      logging.INFO),
                         format=config["logging_format"])
     logger = logging.getLogger("IAMPolicyComplianceChecker")
 
@@ -360,25 +418,26 @@ def main():
             github_token = config["github_token"] or "dummy-token"
             github_repo = config["github_repo"] or "dummy/repo"
             smtp_server = config["smtp_server"] or "dummy-server"
-            smtp_port = int(config["smtp_port"]) if config["smtp_port"] else 587
+            smtp_port = int(
+                config["smtp_port"]) if config["smtp_port"] else 587
             email = config["email"] or "dummy@example.com"
             password = config["password"] or "dummy-password"
-            
-            sending_client = SendingClient(
-                logger=logger,
-                github_token=github_token,
-                github_repo=github_repo,
-                smtp_server=smtp_server,
-                smtp_port=smtp_port,
-                email=email,
-                password=password
-            )
+
+            sending_client = SendingClient(logger=logger,
+                                           github_token=github_token,
+                                           github_repo=github_repo,
+                                           smtp_server=smtp_server,
+                                           smtp_port=smtp_port,
+                                           email=email,
+                                           password=password)
         except Exception as e:
             logger.error(f"Failed to initialize SendingClient: {e}")
             return 1
 
     logger.info(f"Starting IAM policy compliance check with action: {action}")
-    iam_checker = IAMPolicyComplianceChecker(config["project_id"], config["users_file"], logger, sending_client)
+    iam_checker = IAMPolicyComplianceChecker(config["project_id"],
+                                             config["users_file"], logger,
+                                             sending_client)
 
     try:
         if action == "check":
@@ -398,7 +457,8 @@ def main():
             recipient = config["recipient"] or "admin@example.com"
             iam_checker.print_announcement(recipient)
         elif action == "generate":
-            logger.info("Generating new compliance based on current IAM policy...")
+            logger.info(
+                "Generating new compliance based on current IAM policy...")
             iam_checker.generate_compliance()
         else:
             logger.error(f"Unknown action: {action}")
@@ -409,6 +469,7 @@ def main():
 
     return 0
 
+
 if __name__ == "__main__":
-    
+
     sys.exit(main())

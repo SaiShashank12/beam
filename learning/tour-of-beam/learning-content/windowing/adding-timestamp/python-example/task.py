@@ -25,7 +25,6 @@
 #   tags:
 #     - hellobeam
 
-
 import datetime
 import pytz
 
@@ -34,22 +33,26 @@ from apache_beam import window
 
 
 class Output(beam.PTransform):
+
     class _OutputFn(beam.DoFn):
+
         def __init__(self, prefix=''):
             super().__init__()
             self.prefix = prefix
 
         def process(self, element):
-            print(self.prefix+str(element))
+            print(self.prefix + str(element))
 
-    def __init__(self, label=None,prefix=''):
+    def __init__(self, label=None, prefix=''):
         super().__init__(label)
         self.prefix = prefix
 
     def expand(self, input):
         input | beam.ParDo(self._OutputFn(self.prefix))
 
+
 class Event:
+
     def __init__(self, id, event, timestamp):
         self.id = id
         self.event = event
@@ -60,18 +63,24 @@ class Event:
 
 
 class AddTimestampDoFn(beam.DoFn):
+
     def process(self, element, **kwargs):
         unix_timestamp = element.timestamp.timestamp()
         yield window.TimestampedValue(element, unix_timestamp)
 
 
 with beam.Pipeline() as p:
-  (p | beam.Create([
-          Event('1', 'book-order', datetime.datetime(2020, 3, 4, 0, 0, 0, 0, tzinfo=pytz.UTC)),
-          Event('2', 'pencil-order', datetime.datetime(2020, 3, 5, 0, 0, 0, 0, tzinfo=pytz.UTC)),
-          Event('3', 'paper-order', datetime.datetime(2020, 3, 6, 0, 0, 0, 0, tzinfo=pytz.UTC)),
-          Event('4', 'pencil-order', datetime.datetime(2020, 3, 7, 0, 0, 0, 0, tzinfo=pytz.UTC)),
-          Event('5', 'book-order', datetime.datetime(2020, 3, 8, 0, 0, 0, 0, tzinfo=pytz.UTC)),
-       ])
+    (p | beam.Create([
+        Event('1', 'book-order',
+              datetime.datetime(2020, 3, 4, 0, 0, 0, 0, tzinfo=pytz.UTC)),
+        Event('2', 'pencil-order',
+              datetime.datetime(2020, 3, 5, 0, 0, 0, 0, tzinfo=pytz.UTC)),
+        Event('3', 'paper-order',
+              datetime.datetime(2020, 3, 6, 0, 0, 0, 0, tzinfo=pytz.UTC)),
+        Event('4', 'pencil-order',
+              datetime.datetime(2020, 3, 7, 0, 0, 0, 0, tzinfo=pytz.UTC)),
+        Event('5', 'book-order',
+              datetime.datetime(2020, 3, 8, 0, 0, 0, 0, tzinfo=pytz.UTC)),
+    ])
      | beam.ParDo(AddTimestampDoFn())
      | 'Log words' >> Output())

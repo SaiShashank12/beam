@@ -20,6 +20,7 @@ from test_helper import get_file_output, test_is_not_empty
 
 
 class TestCase(unittest.TestCase):
+
     def test_not_empty(self):
         self.assertTrue(test_is_not_empty(), 'The output is empty')
 
@@ -29,6 +30,7 @@ class TestCase(unittest.TestCase):
         # Remove warning line about docker and Python versions
         output = [x for x in output if not x.startswith("WARNING")]
 
-        self.assertIn('Hello Beam', output, 'The input element should contain "Hello Beam".')
-        self.assertEqual(1, len(output), 'The output should contain a single element.')
-
+        self.assertIn('Hello Beam', output,
+                      'The input element should contain "Hello Beam".')
+        self.assertEqual(1, len(output),
+                         'The output should contain a single element.')

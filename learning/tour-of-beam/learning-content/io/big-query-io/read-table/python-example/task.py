@@ -31,7 +31,9 @@ import argparse
 import apache_beam as beam
 from apache_beam.options.pipeline_options import PipelineOptions, GoogleCloudOptions, SetupOptions
 
+
 class WeatherData:
+
     def __init__(self, station_number, wban_number, year, month, day):
         self.station_number = station_number
         self.wban_number = wban_number
@@ -42,6 +44,7 @@ class WeatherData:
     def __str__(self):
         return f"Weather Data: Station {self.station_number} (WBAN {self.wban_number}), Date: {self.year}-{self.month}-{self.day}"
 
+
 def run(argv=None):
     parser = argparse.ArgumentParser()
 
@@ -50,13 +53,15 @@ def run(argv=None):
     pipeline_options = PipelineOptions(pipeline_args)
     pipeline_options.view_as(PipelineOptions)
 
-
     with beam.Pipeline(options=pipeline_options, argv=argv) as p:
-      (p | 'ReadFromBigQuery' >> beam.io.ReadFromBigQuery(table='apache-beam-testing:clouddataflow_samples.weather_stations',
-                                                            method=beam.io.ReadFromBigQuery.Method.DIRECT_READ)
+        (p | 'ReadFromBigQuery' >> beam.io.ReadFromBigQuery(
+            table='apache-beam-testing:clouddataflow_samples.weather_stations',
+            method=beam.io.ReadFromBigQuery.Method.DIRECT_READ)
          | beam.combiners.Sample.FixedSizeGlobally(5)
          | beam.FlatMap(lambda line: line)
-         | beam.Map(lambda element: WeatherData(element['station_number'],element['wban_number'],element['year'],element['month'],element['day']))
+         | beam.Map(lambda element: WeatherData(element[
+             'station_number'], element['wban_number'], element[
+                 'year'], element['month'], element['day']))
          | beam.Map(print))
 
 

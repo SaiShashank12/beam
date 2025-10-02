@@ -45,6 +45,7 @@ ASF_LICENSE_HEADER = """# Licensed to the Apache Software Foundation (ASF) under
 # Do not edit manually.
 \n"""
 
+
 def get_permission_stage(permission_name: str, project_id: str) -> str:
     """
     Finds the support level of a specific IAM permission for a given project. This function caches the results to avoid repeated API calls.
@@ -59,7 +60,8 @@ def get_permission_stage(permission_name: str, project_id: str) -> str:
 
     try:
         if f"{project_id}-stage" in permissions_cache:
-            return permissions_cache[f"{project_id}-stage"].get(permission_name, "")
+            return permissions_cache[f"{project_id}-stage"].get(
+                permission_name, "")
         else:
             permissions_cache[f"{project_id}-stage"] = {}
 
@@ -67,17 +69,19 @@ def get_permission_stage(permission_name: str, project_id: str) -> str:
         resource = f"//cloudresourcemanager.googleapis.com/projects/{project_id}"
 
         request = iam_admin_v1.QueryTestablePermissionsRequest(
-            full_resource_name=resource,
-            page_size=1000
-        )
+            full_resource_name=resource, page_size=1000)
 
         for permission in client.query_testable_permissions(request=request):
-            permissions_cache[f"{project_id}-stage"][permission.name] = permission.custom_roles_support_level
+            permissions_cache[f"{project_id}-stage"][
+                permission.name] = permission.custom_roles_support_level
 
-        return permissions_cache[f"{project_id}-stage"].get(permission_name, "")
+        return permissions_cache[f"{project_id}-stage"].get(
+            permission_name, "")
 
     except exceptions.PermissionDenied as e:
-        print(f"Error: Permission denied. Ensure you have 'resourcemanager.projects.get' on project '{project_id}'.")
+        print(
+            f"Error: Permission denied. Ensure you have 'resourcemanager.projects.get' on project '{project_id}'."
+        )
         print(f"Details: {e}")
         return ""
     except exceptions.NotFound as e:
@@ -87,6 +91,7 @@ def get_permission_stage(permission_name: str, project_id: str) -> str:
     except Exception as e:
         print(f"An unexpected error occurred while fetching permissions: {e}")
         return ""
+
 
 def get_role_permissions(role_name: str, project_id: str = "") -> list[str]:
     """
@@ -103,19 +108,19 @@ def get_role_permissions(role_name: str, project_id: str = "") -> list[str]:
     """
 
     global permissions_cache
-    print(f"Fetching permissions for role: {role_name} in project: {project_id}")
+    print(
+        f"Fetching permissions for role: {role_name} in project: {project_id}")
 
     try:
-        if f"{project_id}-role" in permissions_cache and role_name in permissions_cache[f"{project_id}-role"]:
+        if f"{project_id}-role" in permissions_cache and role_name in permissions_cache[
+                f"{project_id}-role"]:
             return permissions_cache[f"{project_id}-role"].get(role_name, [])
         else:
             if f"{project_id}-role" not in permissions_cache:
                 permissions_cache[f"{project_id}-role"] = {}
 
         client = iam_admin_v1.IAMClient()
-        request = iam_admin_v1.GetRoleRequest(
-            name=role_name,
-        )
+        request = iam_admin_v1.GetRoleRequest(name=role_name, )
         role = client.get_role(request=request)
         all_perms = list(role.included_permissions)
         ga_perms = []
@@ -123,7 +128,7 @@ def get_role_permissions(role_name: str, project_id: str = "") -> list[str]:
             stage = get_permission_stage(perm, project_id)
             if stage == iam_admin_v1.Permission.CustomRolesSupportLevel.SUPPORTED:
                 ga_perms.append(perm)
-        
+
         permissions_cache[f"{project_id}-role"][role_name] = ga_perms
         return ga_perms
     except exceptions.NotFound:
@@ -133,7 +138,10 @@ def get_role_permissions(role_name: str, project_id: str = "") -> list[str]:
         print(f"An unexpected error occurred: {e}")
         return []
 
-def filter_permissions(permissions: list[str], allowed_prefixes: list[str] = [], denied_suffixes: list[str] = []) -> set[str]:
+
+def filter_permissions(permissions: list[str],
+                       allowed_prefixes: list[str] = [],
+                       denied_suffixes: list[str] = []) -> set[str]:
     """
     Filters permissions based on the provided services.
 
@@ -154,7 +162,8 @@ def filter_permissions(permissions: list[str], allowed_prefixes: list[str] = [],
 
     return filtered_permissions
 
-def generate_role(role_name: str , perms: set[str]) -> dict:
+
+def generate_role(role_name: str, perms: set[str]) -> dict:
     return {
         "role_id": f"{role_name}",
         "title": f"{role_name}",
@@ -163,14 +172,18 @@ def generate_role(role_name: str , perms: set[str]) -> dict:
         "permissions": sorted(list(perms)),
     }
 
+
 def write_role_yaml(filename, role_data):
     if not role_data.get("permissions"):
         print(f"No permissions to write for {filename}. Skipping.")
         return
     with open(filename, "w") as f:
         f.write(ASF_LICENSE_HEADER)
-        f.write(f"# This file was generated on {datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%d %H:%M:%S')} UTC\n\n")
+        f.write(
+            f"# This file was generated on {datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%d %H:%M:%S')} UTC\n\n"
+        )
         yaml.dump(role_data, f, default_flow_style=False)
+
 
 def get_config():
     """
@@ -209,10 +222,14 @@ def get_config():
         roles.update(role.get("roles", []))
 
         response["role"][role["name"]] = {
-            "name": role["name"],
-            "description": role.get("description", f"This is the {role['name']} role"),
-            "services": services.copy(),
-            "roles": roles.copy(),
+            "name":
+            role["name"],
+            "description":
+            role.get("description", f"This is the {role['name']} role"),
+            "services":
+            services.copy(),
+            "roles":
+            roles.copy(),
             "except_suffixes": [],
         }
 
@@ -222,11 +239,15 @@ def get_config():
             if except_suffix in suffixes:
                 suffix_set.update(suffixes[except_suffix])
             else:
-                raise ValueError(f"Unknown suffix '{except_suffix}' in role '{role['name']}'")
+                raise ValueError(
+                    f"Unknown suffix '{except_suffix}' in role '{role['name']}'"
+                )
         if suffix_set:
-            response["role"][role["name"]]["except_suffixes"] = list(suffix_set)
+            response["role"][role["name"]]["except_suffixes"] = list(
+                suffix_set)
 
     return response
+
 
 def get_roles():
     """
@@ -243,22 +264,26 @@ def get_roles():
     permissions_added = set()
 
     for role in config["role"].values():
-        print(f"Generating role: {config['roles_prefix']}_{role['name']} with services: {role['services']} and roles: {role['roles']}")
+        print(
+            f"Generating role: {config['roles_prefix']}_{role['name']} with services: {role['services']} and roles: {role['roles']}"
+        )
         # Get the permissions for each base role.
         role_permissions = set()
         for role_name in role["roles"]:
-            role_permissions.update(get_role_permissions(role_name, project_id))
+            role_permissions.update(get_role_permissions(
+                role_name, project_id))
         role["permissions"] = filter_permissions(
             permissions=list(role_permissions),
             allowed_prefixes=list(role["services"]),
-            denied_suffixes=role.get("except_suffixes", [])
-        )
+            denied_suffixes=role.get("except_suffixes", []))
         # Remove already added permissions to avoid duplicates.
         role["permissions"] = role["permissions"].difference(permissions_added)
         permissions_added.update(role["permissions"])
-        response[f"{config['roles_prefix']}_{role['name']}"] = generate_role(f"{config['roles_prefix']}_{role['name']}", role["permissions"])
+        response[f"{config['roles_prefix']}_{role['name']}"] = generate_role(
+            f"{config['roles_prefix']}_{role['name']}", role["permissions"])
 
     return response
+
 
 def main():
     """
@@ -271,7 +296,10 @@ def main():
     for role_name, role_data in roles.items():
         filename = f"{role_name}.role.yaml"
         write_role_yaml(filename, role_data)
-        print(f"Generated {filename} with {len(role_data['permissions'])} permissions.")
+        print(
+            f"Generated {filename} with {len(role_data['permissions'])} permissions."
+        )
+
 
 if __name__ == "__main__":
     main()

@@ -12,7 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """
 This module queries GitHub API to collect Beam-related workflows metrics and
 put them in PostgreSQL.
@@ -46,16 +45,23 @@ DB_PASSWORD = os.environ["DB_DBPWD"]
 GH_APP_ID = os.environ["GH_APP_ID"]
 GH_APP_INSTALLATION_ID = os.environ["GH_APP_INSTALLATION_ID"]
 GH_PEM_KEY = os.environ["GH_PEM_KEY"]
-GH_NUMBER_OF_WORKFLOW_RUNS_TO_FETCH = os.environ["GH_NUMBER_OF_WORKFLOW_RUNS_TO_FETCH"]
+GH_NUMBER_OF_WORKFLOW_RUNS_TO_FETCH = os.environ[
+    "GH_NUMBER_OF_WORKFLOW_RUNS_TO_FETCH"]
 GIT_ORG = "apache"
 GIT_PATH = ".github/workflows"
 GIT_FILESYSTEM_PATH = "/tmp/git"
 
 
 class Workflow:
-    def __init__(
-        self, id, name, filename, url, category=None, threshold=0.5, is_flaky=False
-    ):
+
+    def __init__(self,
+                 id,
+                 name,
+                 filename,
+                 url,
+                 category=None,
+                 threshold=0.5,
+                 is_flaky=False):
         self.id = id
         self.name = name
         self.filename = filename
@@ -67,6 +73,7 @@ class Workflow:
 
 
 class WorkflowRun:
+
     def __init__(self, id, status, url, workflow_id, started_at):
         self.id = id
         self.status = status
@@ -121,11 +128,8 @@ def enhance_workflow(workflow):
             else:
                 workflow.category = "core_java"
         elif "python" in workflow_name:
-            if (
-                "dataflow" in workflow_name
-                or "spark" in workflow_name
-                or "flink" in workflow_name
-            ):
+            if ("dataflow" in workflow_name or "spark" in workflow_name
+                    or "flink" in workflow_name):
                 workflow.category = "runners_python"
             elif "performancetest" in workflow_name or "loadtest" in workflow_name:
                 workflow.category = "load_perf_python"
@@ -139,8 +143,7 @@ def enhance_workflow(workflow):
     workflow_filename = workflow.filename.replace("workflows/", "")
     try:
         workflow_yaml = get_yaml(
-            f"{GIT_FILESYSTEM_PATH}/beam/{GIT_PATH}/{workflow_filename}"
-        )
+            f"{GIT_FILESYSTEM_PATH}/beam/{GIT_PATH}/{workflow_filename}")
         if "env" in workflow_yaml:
             if "ALERT_THRESHOLD" in workflow_yaml["env"]:
                 workflow.threshold = workflow_yaml["env"]["ALERT_THRESHOLD"]
@@ -149,6 +152,7 @@ def enhance_workflow(workflow):
 
 
 async def check_workflow_flakiness(workflow):
+
     def filter_workflow_runs(run, issue):
         closed_at = datetime.strptime(issue["closed_at"], "%Y-%m-%dT%H:%M:%SZ")
         if run.started_at > closed_at:
@@ -159,7 +163,9 @@ async def check_workflow_flakiness(workflow):
         return False
 
     one_month_ago_datetime = datetime.now() - timedelta(days=30)
-    workflow_runs = [run for run in workflow.runs if run.started_at > one_month_ago_datetime]
+    workflow_runs = [
+        run for run in workflow.runs if run.started_at > one_month_ago_datetime
+    ]
 
     url = f"https://api.github.com/repos/{GIT_ORG}/beam/issues"
     headers = {"Authorization": get_token()}
@@ -170,9 +176,11 @@ async def check_workflow_flakiness(workflow):
     }
     response = await fetch(url, semaphore, params, headers)
     if len(response):
-        print(f"Found a recently closed issue for the {workflow.name} workflow")
+        print(
+            f"Found a recently closed issue for the {workflow.name} workflow")
         workflow_runs = [
-            run for run in workflow_runs if filter_workflow_runs(run, response[0])
+            run for run in workflow_runs
+            if filter_workflow_runs(run, response[0])
         ]
 
     print(f"Number of workflow runs to consider: {len(workflow_runs)}")
@@ -182,14 +190,16 @@ async def check_workflow_flakiness(workflow):
 
     success_rate = 1.0
     if len(workflow_runs):
-        failed_runs = list(filter(lambda r: r.status == "failure", workflow_runs))
+        failed_runs = list(
+            filter(lambda r: r.status == "failure", workflow_runs))
         print(f"Number of failed workflow runs: {len(failed_runs)}")
         success_rate -= len(failed_runs) / len(workflow_runs)
 
     print(f"Success rate: {success_rate}")
 
     # Check if last 5 runs are all failures
-    last_5_failed = len(workflow_runs) >= 5 and all(run.status == "failure" for run in workflow_runs[:5])
+    last_5_failed = len(workflow_runs) >= 5 and all(
+        run.status == "failure" for run in workflow_runs[:5])
     if last_5_failed:
         print(f"The last 5 workflow runs for {workflow.name} have all failed")
 
@@ -205,10 +215,8 @@ async def sync_workflow_runs():
     print("Started")
     print("Updating table with recent workflow runs")
 
-    if (
-        not GH_NUMBER_OF_WORKFLOW_RUNS_TO_FETCH
-        or not GH_NUMBER_OF_WORKFLOW_RUNS_TO_FETCH.isdigit()
-    ):
+    if (not GH_NUMBER_OF_WORKFLOW_RUNS_TO_FETCH
+            or not GH_NUMBER_OF_WORKFLOW_RUNS_TO_FETCH.isdigit()):
         raise ValueError(
             "The number of workflow runs to fetch is not specified or not an integer"
         )
@@ -240,8 +248,7 @@ def init_db_connection():
         try:
             connection = psycopg2.connect(
                 f"dbname='{DB_NAME}' user='{DB_USER_NAME}' host='{DB_HOST}'"
-                f" port='{DB_PORT}' password='{DB_PASSWORD}'"
-            )
+                f" port='{DB_PORT}' password='{DB_PASSWORD}'")
         except Exception as e:
             print("Failed to connect to DB; retrying in 1 minute")
             print(e)
@@ -259,11 +266,14 @@ def get_token():
     return f"Bearer {token}"
 
 
-@backoff.on_exception(backoff.constant, aiohttp.ClientResponseError, max_tries=5)
+@backoff.on_exception(backoff.constant,
+                      aiohttp.ClientResponseError,
+                      max_tries=5)
 async def fetch(url, semaphore, params=None, headers=None, request_id=None):
     async with semaphore:
         async with aiohttp.ClientSession() as session:
-            async with session.get(url, params=params, headers=headers) as response:
+            async with session.get(url, params=params,
+                                   headers=headers) as response:
                 if response.status == 200:
                     result = await response.json()
                     if request_id:
@@ -282,6 +292,7 @@ async def fetch(url, semaphore, params=None, headers=None, request_id=None):
 
 
 async def fetch_workflow_runs():
+
     def append_workflow_runs(workflow, runs):
         workflow_runs = {}
         for run in runs:
@@ -298,7 +309,8 @@ async def fetch_workflow_runs():
                     status,
                     run["html_url"],
                     workflow.id,
-                    datetime.strptime(run["run_started_at"], "%Y-%m-%dT%H:%M:%SZ"),
+                    datetime.strptime(run["run_started_at"],
+                                      "%Y-%m-%dT%H:%M:%SZ"),
                 )
                 if workflow_runs.get(workflow_run.id):
                     print(
@@ -311,7 +323,11 @@ async def fetch_workflow_runs():
     headers = {"Authorization": get_token()}
     page = 1
     number_of_entries_per_page = 100  # The number of results per page (max 100)
-    params = {"branch": "master", "page": page, "per_page": number_of_entries_per_page}
+    params = {
+        "branch": "master",
+        "page": page,
+        "per_page": number_of_entries_per_page
+    }
     concurrent_requests = 30  # Number of requests to send simultaneously
     start = datetime.now() - timedelta(days=30)
     earliest_run_creation_date = start.strftime('%Y-%m-%d')
@@ -320,7 +336,8 @@ async def fetch_workflow_runs():
     print("Start fetching recent workflow runs")
     workflow_tasks = []
     response = await fetch(url, semaphore, params, headers)
-    pages_to_fetch = math.ceil(response["total_count"] / number_of_entries_per_page)
+    pages_to_fetch = math.ceil(response["total_count"] /
+                               number_of_entries_per_page)
     while pages_to_fetch >= page:
         params = {
             "branch": "master",
@@ -338,8 +355,8 @@ async def fetch_workflow_runs():
             runs_url = f"{url}/{workflow['id']}/runs"
             page = 1
             pages_to_fetch = math.ceil(
-                int(GH_NUMBER_OF_WORKFLOW_RUNS_TO_FETCH) / number_of_entries_per_page
-            )
+                int(GH_NUMBER_OF_WORKFLOW_RUNS_TO_FETCH) /
+                number_of_entries_per_page)
             while pages_to_fetch >= page:
                 params = {
                     "branch": "master",
@@ -348,7 +365,8 @@ async def fetch_workflow_runs():
                     "exclude_pull_requests": "true",
                     "created": f'>={earliest_run_creation_date}',
                 }
-                workflow_run_tasks.append(fetch(runs_url, semaphore, params, headers))
+                workflow_run_tasks.append(
+                    fetch(runs_url, semaphore, params, headers))
                 page += 1
     print("Successfully fetched workflow runs")
 
@@ -368,9 +386,8 @@ async def fetch_workflow_runs():
                 result = re.search(r"(workflows\/.*)$", workflow_path)
                 if result:
                     workflow_path = result.group(1)
-                workflow = Workflow(
-                    workflow_id, workflow_name, workflow_path, workflow_url
-                )
+                workflow = Workflow(workflow_id, workflow_name, workflow_path,
+                                    workflow_url)
 
             append_workflow_runs(workflow, workflow_runs)
             workflows[workflow_id] = workflow
@@ -380,10 +397,9 @@ async def fetch_workflow_runs():
                 workflow_ids_to_fetch_extra_runs.pop(workflow_id, None)
             print(f"Successfully fetched details for: {workflow.filename}")
 
-    page = (
-        math.ceil(int(GH_NUMBER_OF_WORKFLOW_RUNS_TO_FETCH) / number_of_entries_per_page)
-        + 1
-    )
+    page = (math.ceil(
+        int(GH_NUMBER_OF_WORKFLOW_RUNS_TO_FETCH) / number_of_entries_per_page)
+            + 1)
     # Fetch extra workflow runs if the specified number of runs is not reached
     while workflow_ids_to_fetch_extra_runs:
         extra_workflow_runs_tasks = []
@@ -396,8 +412,7 @@ async def fetch_workflow_runs():
                 "exclude_pull_requests": "true",
             }
             extra_workflow_runs_tasks.append(
-                fetch(runs_url, semaphore, params, headers, workflow_id)
-            )
+                fetch(runs_url, semaphore, params, headers, workflow_id))
         for completed_task in asyncio.as_completed(extra_workflow_runs_tasks):
             workflow_id, response = await completed_task
             workflow = workflows[workflow_id]
@@ -406,9 +421,8 @@ async def fetch_workflow_runs():
             if workflow_runs:
                 append_workflow_runs(workflow, workflow_runs)
             else:
-                number_of_runs_to_add = int(GH_NUMBER_OF_WORKFLOW_RUNS_TO_FETCH) - len(
-                    workflow.runs
-                )
+                number_of_runs_to_add = int(
+                    GH_NUMBER_OF_WORKFLOW_RUNS_TO_FETCH) - len(workflow.runs)
                 for _ in range(number_of_runs_to_add):
                     workflow.runs.append(
                         WorkflowRun(
@@ -416,20 +430,20 @@ async def fetch_workflow_runs():
                             "None",
                             "None",
                             workflow.id,
-                            datetime.strptime(
-                                "0001-01-01T00:00:00Z", "%Y-%m-%dT%H:%M:%SZ"
-                            ),
-                        )
-                    )
+                            datetime.strptime("0001-01-01T00:00:00Z",
+                                              "%Y-%m-%dT%H:%M:%SZ"),
+                        ))
             if len(workflow.runs) >= int(GH_NUMBER_OF_WORKFLOW_RUNS_TO_FETCH):
                 workflow_ids_to_fetch_extra_runs.pop(workflow_id, None)
-            print(f"Successfully fetched extra workflow runs for: {workflow.filename}")
+            print(
+                f"Successfully fetched extra workflow runs for: {workflow.filename}"
+            )
         page += 1
     print("Successfully fetched workflow runs details")
 
     for workflow in list(workflows.values()):
         runs = sorted(workflow.runs, key=lambda r: r.started_at, reverse=True)
-        workflow.runs = runs[: int(GH_NUMBER_OF_WORKFLOW_RUNS_TO_FETCH)]
+        workflow.runs = runs[:int(GH_NUMBER_OF_WORKFLOW_RUNS_TO_FETCH)]
 
     return list(workflows.values())
 
@@ -481,26 +495,23 @@ def save_workflows(workflows):
     insert_workflow_runs = []
     current_date = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
     for workflow in workflows:
-        insert_workflows.append(
-            (
-                workflow.id,
-                workflow.name,
-                workflow.filename,
-                workflow.url,
-                workflow.category,
-                workflow.threshold,
-                workflow.is_flaky,
-                current_date,
-            )
-        )
+        insert_workflows.append((
+            workflow.id,
+            workflow.name,
+            workflow.filename,
+            workflow.url,
+            workflow.category,
+            workflow.threshold,
+            workflow.is_flaky,
+            current_date,
+        ))
         for idx, run in enumerate(workflow.runs):
-            insert_workflow_runs.append(
-                (run.id, idx + 1, run.status, run.url, run.workflow_id, run.started_at)
-            )
-    psycopg2.extras.execute_values(cursor, insert_workflows_query, insert_workflows)
-    psycopg2.extras.execute_values(
-        cursor, insert_workflow_runs_query, insert_workflow_runs
-    )
+            insert_workflow_runs.append((run.id, idx + 1, run.status, run.url,
+                                         run.workflow_id, run.started_at))
+    psycopg2.extras.execute_values(cursor, insert_workflows_query,
+                                   insert_workflows)
+    psycopg2.extras.execute_values(cursor, insert_workflow_runs_query,
+                                   insert_workflow_runs)
     cursor.close()
     connection.commit()
     connection.close()

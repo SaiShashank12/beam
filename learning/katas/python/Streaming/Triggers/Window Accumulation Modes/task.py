@@ -46,18 +46,21 @@ from apache_beam.transforms.util import LogElements
 
 
 class CountEventsWithAccumulating(beam.PTransform):
-  def expand(self, events):
-    return (events
-            | beam.WindowInto(FixedWindows(1 * 24 * 60 * 60),  # 1 Day Window
-                              trigger=AfterWatermark(early=AfterCount(1)),
-                              accumulation_mode=AccumulationMode.ACCUMULATING,
-                              allowed_lateness=Duration(seconds=0))
-            | beam.CombineGlobally(beam.combiners.CountCombineFn()).without_defaults())
+
+    def expand(self, events):
+        return (events
+                | beam.WindowInto(
+                    FixedWindows(1 * 24 * 60 * 60),  # 1 Day Window
+                    trigger=AfterWatermark(early=AfterCount(1)),
+                    accumulation_mode=AccumulationMode.ACCUMULATING,
+                    allowed_lateness=Duration(seconds=0))
+                | beam.CombineGlobally(
+                    beam.combiners.CountCombineFn()).without_defaults())
 
 
 options = PipelineOptions()
 options.view_as(StandardOptions).streaming = True
 with beam.Pipeline(options=options) as p:
-  (p | GenerateEvent.sample_data()
-   | CountEventsWithAccumulating()
-   | LogElements(with_window=True))
+    (p | GenerateEvent.sample_data()
+     | CountEventsWithAccumulating()
+     | LogElements(with_window=True))

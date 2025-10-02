@@ -26,22 +26,24 @@
 #     - merge
 #     - strings
 
+
 def flatten():
-  # [START flatten]
-  import apache_beam as beam
-  
-  with beam.Pipeline() as p:
-  
-    wordsStartingWithA = \
-        p | 'Words starting with A' >> beam.Create(['apple', 'ant', 'arrow'])
-  
-    wordsStartingWithB = \
-        p | 'Words starting with B' >> beam.Create(['ball', 'book', 'bow'])
-  
-    ((wordsStartingWithA, wordsStartingWithB)
-      | beam.Flatten()
-      | beam.LogElements())
-  # [END flatten]
+    # [START flatten]
+    import apache_beam as beam
+
+    with beam.Pipeline() as p:
+
+        wordsStartingWithA = \
+            p | 'Words starting with A' >> beam.Create(['apple', 'ant', 'arrow'])
+
+        wordsStartingWithB = \
+            p | 'Words starting with B' >> beam.Create(['ball', 'book', 'bow'])
+
+        ((wordsStartingWithA, wordsStartingWithB)
+         | beam.Flatten()
+         | beam.LogElements())
+    # [END flatten]
+
 
 if __name__ == '__main__':
-  flatten()
+    flatten()
