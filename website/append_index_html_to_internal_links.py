@@ -14,7 +14,6 @@
 # KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations
 # under the License.
-
 """Script to fix the links in the staged website.
 Finds all internal links which do not have index.html at the end and appends
 index.html in the appropriate place (preserving anchors, etc).
@@ -38,7 +37,7 @@ import re
 from bs4 import BeautifulSoup
 
 try:
-    unicode           # pylint: disable=unicode-builtin
+    unicode  # pylint: disable=unicode-builtin
 except NameError:
     unicode = str
 
@@ -54,74 +53,76 @@ anchorMatch1 = r'(.+\/)(#[^\/]+$)'
 # groups for ease of inserting 'index.html'.
 anchorMatch2 = r'(.+\/[a-zA-Z0-9]+)(#[^\/]+$)'
 
-parser = argparse.ArgumentParser(description='Fix links in the staged website.')
-parser.add_argument('content_dir', help='Generated content directory to fix links in')
+parser = argparse.ArgumentParser(
+    description='Fix links in the staged website.')
+parser.add_argument('content_dir',
+                    help='Generated content directory to fix links in')
 args = parser.parse_args()
 
 matches = []
 # Recursively walk content directory and find all html files.
 for root, dirnames, filenames in os.walk(args.content_dir):
-  for filename in fnmatch.filter(filenames, '*.html'):
-    # Javadoc does not have the index.html problem, so omit it.
-    if 'javadoc' not in root:
-      matches.append(os.path.join(root, filename))
+    for filename in fnmatch.filter(filenames, '*.html'):
+        # Javadoc does not have the index.html problem, so omit it.
+        if 'javadoc' not in root:
+            matches.append(os.path.join(root, filename))
 
 print('Matches: ' + str(len(matches)))
 # Iterates over each matched file looking for link matches.
 for match in matches:
-  print('Fixing links in: ' + match)
-  mf = open(match)
-  soup = BeautifulSoup(mf)
+    print('Fixing links in: ' + match)
+    mf = open(match)
+    soup = BeautifulSoup(mf)
 
-  # Iterates over every <meta> which is used for aliases - redirected links
-  for meta in soup.findAll('meta'):
-    try:
-      content = meta['content']
-      alias = content.replace('0; url=', '')
-      if re.match(linkMatch, alias) is not None:
-        if alias.endswith('/'):
-          # /internal/link/
-          meta['content'] = content + 'index.html'
-        else:
-          # /internal/link
-          meta['content'] = content + '/index.html'
-        mf.close()
+    # Iterates over every <meta> which is used for aliases - redirected links
+    for meta in soup.findAll('meta'):
+        try:
+            content = meta['content']
+            alias = content.replace('0; url=', '')
+            if re.match(linkMatch, alias) is not None:
+                if alias.endswith('/'):
+                    # /internal/link/
+                    meta['content'] = content + 'index.html'
+                else:
+                    # /internal/link
+                    meta['content'] = content + '/index.html'
+                mf.close()
 
-        html = unicode(soup).encode('utf-8')
-        # Write back to the file.
-        with open(match, "wb") as f:
-          print('Replacing ' + content + ' with: ' + meta['content'])
-          f.write(html)
-    except KeyError as e:
-      # Some <meta> tags don't have url.
-      continue
+                html = unicode(soup).encode('utf-8')
+                # Write back to the file.
+                with open(match, "wb") as f:
+                    print('Replacing ' + content + ' with: ' + meta['content'])
+                    f.write(html)
+        except KeyError as e:
+            # Some <meta> tags don't have url.
+            continue
 
-  # Iterates over every <a>
-  for a in soup.findAll('a'):
-    try:
-      hr = a['href']
-      if re.match(linkMatch, hr) is not None:
-        if hr.endswith('/'):
-          # /internal/link/
-          a['href'] = hr + 'index.html'
-        elif re.match(anchorMatch1, hr) is not None:
-          # /internal/link/#anchor
-          mat = re.match(anchorMatch1, hr)
-          a['href'] = mat.group(1) + 'index.html' + mat.group(2)
-        elif re.match(anchorMatch2, hr) is not None:
-          # /internal/link#anchor
-          mat = re.match(anchorMatch2, hr)
-          a['href'] = mat.group(1) + '/index.html' + mat.group(2)
-        else:
-          # /internal/link
-          a['href'] = hr + '/index.html'
-        mf.close()
+    # Iterates over every <a>
+    for a in soup.findAll('a'):
+        try:
+            hr = a['href']
+            if re.match(linkMatch, hr) is not None:
+                if hr.endswith('/'):
+                    # /internal/link/
+                    a['href'] = hr + 'index.html'
+                elif re.match(anchorMatch1, hr) is not None:
+                    # /internal/link/#anchor
+                    mat = re.match(anchorMatch1, hr)
+                    a['href'] = mat.group(1) + 'index.html' + mat.group(2)
+                elif re.match(anchorMatch2, hr) is not None:
+                    # /internal/link#anchor
+                    mat = re.match(anchorMatch2, hr)
+                    a['href'] = mat.group(1) + '/index.html' + mat.group(2)
+                else:
+                    # /internal/link
+                    a['href'] = hr + '/index.html'
+                mf.close()
 
-        html = unicode(soup).encode('utf-8')
-        # Write back to the file.
-        with open(match, "wb") as f:
-          print('Replacing ' + hr + ' with: ' + a['href'])
-          f.write(html)
-    except KeyError as e:
-      # Some <a> tags don't have an href.
-      continue
+                html = unicode(soup).encode('utf-8')
+                # Write back to the file.
+                with open(match, "wb") as f:
+                    print('Replacing ' + hr + ' with: ' + a['href'])
+                    f.write(html)
+        except KeyError as e:
+            # Some <a> tags don't have an href.
+            continue

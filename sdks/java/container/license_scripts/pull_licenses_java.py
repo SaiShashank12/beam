@@ -39,11 +39,14 @@ from tenacity import stop_after_attempt
 from tenacity import wait_fixed
 from urllib.request import urlopen, Request, URLError, HTTPError
 
-SOURCE_CODE_REQUIRED_LICENSES = ['lgpl', 'gpl', 'cddl', 'mpl', 'gnu', 'mozilla public license']
+SOURCE_CODE_REQUIRED_LICENSES = [
+    'lgpl', 'gpl', 'cddl', 'mpl', 'gnu', 'mozilla public license'
+]
 RETRY_NUM = 12
 THREADS = 8
 
 CACHED_LICENSES = set()
+
 
 # workaround of a breaking change introduced in tenacity 8.5+
 # See https://github.com/jd/tenacity/issues/486
@@ -51,9 +54,8 @@ def resolve_retry_number(retried_fn):
     return retried_fn.retry.statistics.get("attempt_number") or \
         retried_fn.statistics.get("attempt_number")
 
-@retry(reraise=True,
-       wait=wait_fixed(10),
-       stop=stop_after_attempt(RETRY_NUM))
+
+@retry(reraise=True, wait=wait_fixed(10), stop=stop_after_attempt(RETRY_NUM))
 def pull_from_url(file_name, url, dep, no_list, use_cache=False):
     if url == 'skip':
         return
@@ -71,34 +73,46 @@ def pull_from_url(file_name, url, dep, no_list, use_cache=False):
         md5sum = hashlib.md5(url.encode()).hexdigest()
         cached_file_name = os.path.join(cached_license_path, md5sum)
         if os.path.exists(cached_file_name):
-            logging.info(f"Requested license {url} in cache. Copying {cached_file_name} -> {file_name}")
+            logging.info(
+                f"Requested license {url} in cache. Copying {cached_file_name} -> {file_name}"
+            )
             shutil.copy(cached_file_name, file_name)
             return
         else:
             pulled_file_name = cached_file_name
-            logging.info(f"Requested license {url} not in cache. Pulling it into {pulled_file_name}")
+            logging.info(
+                f"Requested license {url} not in cache. Pulling it into {pulled_file_name}"
+            )
     else:
         pulled_file_name = file_name
 
     try:
-        url_read = urlopen(Request(url, headers={
-            'User-Agent': 'Apache Beam',
-            'accept-language': 'en-US,en;q=0.9',
-        }))
+        url_read = urlopen(
+            Request(url,
+                    headers={
+                        'User-Agent': 'Apache Beam',
+                        'accept-language': 'en-US,en;q=0.9',
+                    }))
         with open(pulled_file_name, 'wb') as temp_write:
             shutil.copyfileobj(url_read, temp_write)
-        logging.debug(f'Successfully pulled {pulled_file_name} from {url} for {dep}')
+        logging.debug(
+            f'Successfully pulled {pulled_file_name} from {url} for {dep}')
     except HTTPError as e:
         if e.code == 403 and use_cache and os.path.exists(cached_file_name):
-            logging.warning(f"HTTP 403 for {url}, using cached license at {cached_file_name}")
+            logging.warning(
+                f"HTTP 403 for {url}, using cached license at {cached_file_name}"
+            )
             shutil.copy(cached_file_name, file_name)
             return
         traceback.print_exc()
         if resolve_retry_number(pull_from_url) < RETRY_NUM:
-            logging.error(f'Received {e.code} from {url} for {dep}. Retrying...')
+            logging.error(
+                f'Received {e.code} from {url} for {dep}. Retrying...')
             raise
         else:
-            logging.error(f'Received {e.code} from {url} for {dep} after {RETRY_NUM} retries.')
+            logging.error(
+                f'Received {e.code} from {url} for {dep} after {RETRY_NUM} retries.'
+            )
             with thread_lock:
                 no_list.append(dep)
             return
@@ -108,7 +122,8 @@ def pull_from_url(file_name, url, dep, no_list, use_cache=False):
             logging.error(f'Invalid url for {dep}: {url}. Retrying...')
             raise
         else:
-            logging.error(f'Invalid url for {dep}: {url} after {RETRY_NUM} retries.')
+            logging.error(
+                f'Invalid url for {dep}: {url} after {RETRY_NUM} retries.')
             with thread_lock:
                 no_list.append(dep)
             return
@@ -116,11 +131,13 @@ def pull_from_url(file_name, url, dep, no_list, use_cache=False):
         traceback.print_exc()
         if resolve_retry_number(pull_from_url) < RETRY_NUM:
             logging.error(
-                f'Error occurred when pulling {file_name} from {url} for {dep}. Retrying...')
+                f'Error occurred when pulling {file_name} from {url} for {dep}. Retrying...'
+            )
             raise
         else:
             logging.error(
-                f'Error occurred when pulling {file_name} from {url} for {dep} after {RETRY_NUM} retries.')
+                f'Error occurred when pulling {file_name} from {url} for {dep} after {RETRY_NUM} retries.'
+            )
             with thread_lock:
                 no_list.append(dep)
             return
@@ -130,24 +147,28 @@ def pull_from_url(file_name, url, dep, no_list, use_cache=False):
         logging.info(f"Copying {pulled_file_name} -> {file_name}")
         shutil.copy(pulled_file_name, file_name)
 
+
 def pull_source_code(base_url, dir_name, dep):
     # base_url example: https://repo1.maven.org/maven2/org/mortbay/jetty/jsp-2.1/6.1.14/
     try:
-      soup = BeautifulSoup(urlopen(base_url).read(), "html.parser")
+        soup = BeautifulSoup(urlopen(base_url).read(), "html.parser")
     except:
-      logging.error('Error reading source base from {base_url}'.format(base_url=base_url))
-      raise
+        logging.error('Error reading source base from {base_url}'.format(
+            base_url=base_url))
+        raise
     source_count = 0
     for href in (a["href"] for a in soup.select("a[href]")):
         if href.endswith(
-                '.jar') and 'sources.jar' in href:  # download sources jar file only
+                '.jar'
+        ) and 'sources.jar' in href:  # download sources jar file only
             file_name = dir_name + '/' + href
             url = base_url + '/' + href
             logging.debug('Pulling source from {url}'.format(url=url))
             pull_from_url(file_name, url, dep, incorrect_source_url)
             source_count = source_count + 1
     if source_count == 0:
-      raise RuntimeError('No source found at {base_url}'.format(base_url=base_url))
+        raise RuntimeError(
+            'No source found at {base_url}'.format(base_url=base_url))
 
 
 @retry(reraise=True, stop=stop_after_attempt(3))
@@ -185,12 +206,12 @@ def execute(dep):
     name_version = name + '-' + version
     # javac is not a runtime dependency
     if name == 'javac':
-      logging.debug('Skipping %s', name_version)
-      return
+        logging.debug('Skipping %s', name_version)
+        return
     # skip self dependencies
     if dep['moduleName'].lower().startswith('beam'):
-      logging.debug('Skipping %s', name_version)
-      return
+        logging.debug('Skipping %s', name_version)
+        return
     dir_name = '{output_dir}/{name_version}.jar'.format(
         output_dir=output_dir, name_version=name_version)
 
@@ -208,8 +229,11 @@ def execute(dep):
                 with thread_lock:
                     no_licenses.append(name_version)
                 license_url = 'skip'
-        pull_from_url(dir_name + '/LICENSE', license_url, name_version,
-                      no_licenses, use_cache=use_license_cache)
+        pull_from_url(dir_name + '/LICENSE',
+                      license_url,
+                      name_version,
+                      no_licenses,
+                      use_cache=use_license_cache)
         # pull notice
         try:
             notice_url = dep_config[name][version]['notice']
@@ -263,7 +287,7 @@ def read_cached_licenses():
     global CACHED_LICENSES
 
     try:
-        CACHED_LICENSES=set(os.listdir(cached_license_path))
+        CACHED_LICENSES = set(os.listdir(cached_license_path))
         logging.info("Read %d licenses from cache.", len(CACHED_LICENSES))
     except:
         logging.warning("Error occurred when reading cached licenses.")
@@ -277,7 +301,9 @@ if __name__ == "__main__":
     parser.add_argument('--output_dir', required=True)
     parser.add_argument('--dep_url_yaml', required=True)
     parser.add_argument('--manual_license_path', required=True)
-    parser.add_argument('--use_license_cache', action='store_true', default=False)
+    parser.add_argument('--use_license_cache',
+                        action='store_true',
+                        default=False)
 
     args = parser.parse_args()
     license_index = args.license_index
