@@ -29,6 +29,4 @@ import apache_beam as beam
 
 with beam.Pipeline() as p:
 
-  (p | beam.Create(['Hello Beam'])
-     | beam.LogElements())
-
+    (p | beam.Create(['Hello Beam']) | beam.LogElements())

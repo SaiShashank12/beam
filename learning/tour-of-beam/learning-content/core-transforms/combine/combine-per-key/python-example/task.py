@@ -27,17 +27,20 @@
 
 import apache_beam as beam
 
+
 # Output PCollection
 class Output(beam.PTransform):
+
     class _OutputFn(beam.DoFn):
+
         def __init__(self, prefix=''):
             super().__init__()
             self.prefix = prefix
 
         def process(self, element):
-            print(self.prefix+str(element))
+            print(self.prefix + str(element))
 
-    def __init__(self, label=None,prefix=''):
+    def __init__(self, label=None, prefix=''):
         super().__init__(label)
         self.prefix = prefix
 
@@ -50,8 +53,7 @@ PLAYER_2 = 'Player 2'
 PLAYER_3 = 'Player 3'
 
 with beam.Pipeline() as p:
-  (p | beam.Create([(PLAYER_1, 15), (PLAYER_2, 10), (PLAYER_1, 100),
-                    (PLAYER_3, 25), (PLAYER_2, 75)])
+    (p | beam.Create([(PLAYER_1, 15), (PLAYER_2, 10), (PLAYER_1, 100),
+                      (PLAYER_3, 25), (PLAYER_2, 75)])
      | beam.CombinePerKey(sum)
      | Output())
-

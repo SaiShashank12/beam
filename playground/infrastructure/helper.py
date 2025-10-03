@@ -12,7 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """
 Common helper module for CI/CD Steps
 """
@@ -61,7 +60,8 @@ def _check_no_nested(subdirs: List[str]):
             raise ValueError(f"{dir2} is a subdirectory of {dir1}")
 
 
-def find_examples(root_dir: str, subdirs: List[str], sdk: SdkEnum) -> List[Example]:
+def find_examples(root_dir: str, subdirs: List[str],
+                  sdk: SdkEnum) -> List[Example]:
     """
     Find and return beam examples.
 
@@ -100,16 +100,19 @@ def find_examples(root_dir: str, subdirs: List[str], sdk: SdkEnum) -> List[Examp
                 filepath = os.path.join(root, filename)
                 try:
                     try:
-                        example = _load_example(
-                            filename=filename, filepath=filepath, sdk=sdk
-                        )
+                        example = _load_example(filename=filename,
+                                                filepath=filepath,
+                                                sdk=sdk)
                         if example is not None:
                             examples.append(example)
                     except pydantic.ValidationError as err:
                         if len(err.errors()) > 1:
                             raise
-                        if err.errors()[0]["msg"] == "multifile is True but no files defined":
-                            logging.warning("incomplete multifile example ignored %s", filepath)
+                        if err.errors(
+                        )[0]["msg"] == "multifile is True but no files defined":
+                            logging.warning(
+                                "incomplete multifile example ignored %s",
+                                filepath)
                             continue
                         raise
                 except Exception:
@@ -118,8 +121,7 @@ def find_examples(root_dir: str, subdirs: List[str], sdk: SdkEnum) -> List[Examp
     if has_errors:
         raise ValueError(
             "Some of the beam examples contain beam playground tag with "
-            "an incorrect format"
-        )
+            "an incorrect format")
     return examples
 
 
@@ -152,9 +154,8 @@ def get_tag(filepath: PurePath) -> Optional[Tag]:
     if not line_start or not line_finish:
         return None
 
-    embdedded_yaml_content = "".join(
-        line[len(tag_prefix) :] for line in lines[line_start:line_finish]
-    )
+    embdedded_yaml_content = "".join(line[len(tag_prefix):]
+                                     for line in lines[line_start:line_finish])
     yml = yaml.load(embdedded_yaml_content, Loader=yaml.SafeLoader)
 
     try:
@@ -163,12 +164,15 @@ def get_tag(filepath: PurePath) -> Optional[Tag]:
             line_start=line_start,
             line_finish=line_finish,
             **yml[Config.BEAM_PLAYGROUND],
-            )
+        )
     except pydantic.ValidationError as err:
-        if len(err.errors()) == 1 and err.errors()[0]["msg"] == "multifile is True but no files defined":
-            logging.warning("incomplete multifile example ignored %s", filepath)
+        if len(err.errors()) == 1 and err.errors(
+        )[0]["msg"] == "multifile is True but no files defined":
+            logging.warning("incomplete multifile example ignored %s",
+                            filepath)
             return None
         raise
+
 
 def _load_example(filename, filepath, sdk: SdkEnum) -> Optional[Example]:
     """
@@ -187,7 +191,8 @@ def _load_example(filename, filepath, sdk: SdkEnum) -> Optional[Example]:
     logging.debug("inspecting file %s", filepath)
     extension = filepath.split(os.extsep)[-1]
     if extension == Config.SDK_TO_EXTENSION[sdk]:
-        logging.debug("sdk %s matched extension %s", api_pb2.Sdk.Name(sdk), extension)
+        logging.debug("sdk %s matched extension %s", api_pb2.Sdk.Name(sdk),
+                      extension)
         tag = get_tag(filepath)
         if tag is not None:
             logging.debug("playground-beam tag found")
@@ -212,7 +217,8 @@ def load_supported_categories(categories_path: str):
     if _load_supported_categories:
         return
     with open(categories_path, encoding="utf-8") as supported_categories:
-        yaml_object = yaml.load(supported_categories.read(), Loader=yaml.SafeLoader)
+        yaml_object = yaml.load(supported_categories.read(),
+                                Loader=yaml.SafeLoader)
 
     Tag.Config.supported_categories = yaml_object[TagFields.categories]
     _load_supported_categories = True
@@ -231,7 +237,8 @@ def _get_url_vcs(filepath: str) -> str:
     """
     root_dir = os.getenv(BEAM_ROOT_DIR_ENV_VAR_KEY, "../..")
     rel_path = os.path.relpath(filepath, root_dir)
-    url_vcs = "{}/{}".format(Config.URL_VCS_PREFIX, urllib.parse.quote(rel_path))
+    url_vcs = "{}/{}".format(Config.URL_VCS_PREFIX,
+                             urllib.parse.quote(rel_path))
     return url_vcs
 
 
@@ -249,8 +256,9 @@ def _get_example(filepath: str, filename: str, tag: Tag, sdk: int) -> Example:
     """
 
     # Calculate context line with tag removed. Note: context_line is 1-based, line_start and line_finish are 0-based.
-    context_line = tag.context_line if tag.context_line <= tag.line_start else tag.context_line - (tag.line_finish - tag.line_start)
-    
+    context_line = tag.context_line if tag.context_line <= tag.line_start else tag.context_line - (
+        tag.line_finish - tag.line_start)
+
     return Example(
         sdk=SdkEnum(sdk),
         tag=tag,
@@ -284,30 +292,35 @@ async def update_example_status(example: Example, client: GRPCClient):
         datasets.append(
             api_pb2.Dataset(
                 type=api_pb2.EmulatorType.Value(
-                    f"EMULATOR_TYPE_{emulator.type.upper()}"
-                ),
+                    f"EMULATOR_TYPE_{emulator.type.upper()}"),
                 options={"topic": emulator.topic.id},
                 dataset_path=dataset.file_name,
-            )
-        )
+            ))
     files: List[api_pb2.SnippetFile] = [
-        api_pb2.SnippetFile(name=example.filepath, content=example.code, is_main=True)
+        api_pb2.SnippetFile(name=example.filepath,
+                            content=example.code,
+                            is_main=True)
     ]
     for file in example.tag.files:
         files.append(
-            api_pb2.SnippetFile(name=file.name, content=file.content, is_main=False)
-        )
+            api_pb2.SnippetFile(name=file.name,
+                                content=file.content,
+                                is_main=False))
 
     pipeline_id = await client.run_code(
-        example.code, example.sdk, example.tag.pipeline_options, datasets, files=files,
+        example.code,
+        example.sdk,
+        example.tag.pipeline_options,
+        datasets,
+        files=files,
     )
     example.pipeline_id = pipeline_id
     status = await client.check_status(pipeline_id)
     while status in [
-        STATUS_VALIDATING,
-        STATUS_PREPARING,
-        STATUS_COMPILING,
-        STATUS_EXECUTING,
+            STATUS_VALIDATING,
+            STATUS_PREPARING,
+            STATUS_COMPILING,
+            STATUS_EXECUTING,
     ]:
         await asyncio.sleep(Config.PAUSE_DELAY)
         status = await client.check_status(pipeline_id)

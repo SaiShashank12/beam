@@ -23,19 +23,17 @@ from test_helper import test_is_not_empty, get_file_output
 
 
 class TestCase(unittest.TestCase):
+
     def test_not_empty(self):
         self.assertTrue(test_is_not_empty(), 'The output is empty')
 
     def test_output(self):
         output = get_file_output(path='task.py')
 
-        answers = [
-            'apple:2',
-            'banana:4',
-            'grape:1',
-            'orange:2',
-            'papaya:1'
-        ]
+        answers = ['apple:2', 'banana:4', 'grape:1', 'orange:2', 'papaya:1']
 
         for ans in answers:
-            self.assertIn(ans, output, 'Incorrect output. Count number of each word in "word:count" format.')
+            self.assertIn(
+                ans, output,
+                'Incorrect output. Count number of each word in "word:count" format.'
+            )

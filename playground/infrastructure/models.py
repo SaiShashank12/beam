@@ -138,7 +138,6 @@ class Tag(BaseModel):
     If 'True', it will not be possible to run this example from Playground UI. It will be read-only.
     """
 
-
     multifile: bool = False
     """
     Whether this is a file of a multi-file example.
@@ -173,10 +172,10 @@ class Tag(BaseModel):
 
     @root_validator(skip_on_failure=True)
     def lines_order(cls, values):
-        assert (
-            (0 <= values["line_start"] < values["line_finish"]) and
-              (values["context_line"] <= values["line_start"] or values["context_line"] > values["line_finish"])
-        ), f"line ordering error: {values}"
+        assert ((0 <= values["line_start"] < values["line_finish"])
+                and (values["context_line"] <= values["line_start"]
+                     or values["context_line"] > values["line_finish"])
+                ), f"line ordering error: {values}"
         return values
 
     @root_validator(skip_on_failure=True)
@@ -201,20 +200,19 @@ class Tag(BaseModel):
         for dataset_id, dataset in datasets.items():
             dataset.file_name = f"{dataset_id}.{dataset.format}"
             if dataset.location == DatasetLocation.LOCAL:
-                dataset_path = os.path.join(
-                    RepoProps.REPO_DATASETS_PATH, dataset.file_name
-                )
+                dataset_path = os.path.join(RepoProps.REPO_DATASETS_PATH,
+                                            dataset.file_name)
                 if not os.path.isfile(dataset_path):
-                    logging.error(
-                        "File not found at the specified path: %s", dataset_path
-                    )
+                    logging.error("File not found at the specified path: %s",
+                                  dataset_path)
                     raise FileNotFoundError
         return datasets
 
     @validator("categories", each_item=True)
     def category_supported(cls, v, values, config, **kwargs):
         if v not in config.supported_categories:
-            raise ValueError(f"Category {v} not in {config.supported_categories}")
+            raise ValueError(
+                f"Category {v} not in {config.supported_categories}")
         return v
 
     @root_validator

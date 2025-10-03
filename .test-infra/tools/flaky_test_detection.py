@@ -20,7 +20,6 @@ from datetime import datetime
 from github import Github
 from github import Auth
 
-
 ALERT_NAME = "flaky_test"
 GIT_ORG = "apache"
 GRAFANA_URL = "http://metrics.beam.apache.org"
@@ -41,6 +40,7 @@ READ_ONLY = os.environ.get("READ_ONLY", "true")
 
 
 class Alert:
+
     def __init__(
         self,
         workflow_id,
@@ -107,10 +107,8 @@ def get_grafana_alerts():
     url = f"{GRAFANA_URL}/api/alertmanager/grafana/api/v2/alerts?active=true&filter=alertname%3D{ALERT_NAME}"
     response = requests.get(url)
     if response.status_code != 200:
-        raise RuntimeError(
-            "Request to %s failed with status %d: %s"
-            % (url, response.status_code, response.text)
-        )
+        raise RuntimeError("Request to %s failed with status %d: %s" %
+                           (url, response.status_code, response.text))
     alerts = []
     if response.text:
         for alert in response.json():
@@ -122,9 +120,9 @@ def get_grafana_alerts():
                     alert["labels"]["workflow_filename"],
                     alert["labels"]["workflow_threshold"],
                     alert["labels"]["dashboard_category"],
-                    datetime.fromisoformat(alert["labels"]["workflow_retrieved_at"]),
-                )
-            )
+                    datetime.fromisoformat(
+                        alert["labels"]["workflow_retrieved_at"]),
+                ))
     return alerts
 
 
@@ -149,15 +147,22 @@ def main():
             if READ_ONLY == "true":
                 print("READ_ONLY is true, not reopening issue")
             elif issue.closed_at > alert.workflow_retrieved_at:
-                print(f"The issue for the workflow {alert.workflow_id} has been closed, skipping")
+                print(
+                    f"The issue for the workflow {alert.workflow_id} has been closed, skipping"
+                )
             else:
                 issue.edit(state="open")
-                issue.create_comment(body="Reopening since the workflow is still flaky")
-                print(f"The issue for the workflow {alert.workflow_id} has been reopened")
+                issue.create_comment(
+                    body="Reopening since the workflow is still flaky")
+                print(
+                    f"The issue for the workflow {alert.workflow_id} has been reopened"
+                )
         elif alert.workflow_id not in workflow_open_issues.keys():
             create_github_issue(repo, alert)
         else:
-            print(f"The issue for the workflow {alert.workflow_id} is already open, skipping")
+            print(
+                f"The issue for the workflow {alert.workflow_id} is already open, skipping"
+            )
 
     g.close()
 

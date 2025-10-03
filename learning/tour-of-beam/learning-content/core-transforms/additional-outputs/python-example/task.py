@@ -28,25 +28,30 @@
 import apache_beam as beam
 from apache_beam import pvalue
 
+
 # Output PCollection
 class Output(beam.PTransform):
+
     class _OutputFn(beam.DoFn):
+
         def __init__(self, prefix=''):
             super().__init__()
             self.prefix = prefix
 
         def process(self, element):
-            print(self.prefix+str(element))
+            print(self.prefix + str(element))
 
-    def __init__(self, label=None,prefix=''):
+    def __init__(self, label=None, prefix=''):
         super().__init__(label)
         self.prefix = prefix
 
     def expand(self, input):
         input | beam.ParDo(self._OutputFn(self.prefix))
 
+
 num_below_100_tag = 'num_below_100'
 num_above_100_tag = 'num_above_100'
+
 
 class ProcessNumbersDoFn(beam.DoFn):
 
@@ -56,12 +61,16 @@ class ProcessNumbersDoFn(beam.DoFn):
         else:
             yield pvalue.TaggedOutput(num_above_100_tag, element)
 
+
 with beam.Pipeline() as p:
-  results = (p | beam.Create([10, 50, 120, 20, 200, 0])
-               | beam.ParDo(ProcessNumbersDoFn()).with_outputs(num_above_100_tag, main=num_below_100_tag))
+    results = (p | beam.Create([10, 50, 120, 20, 200, 0])
+               | beam.ParDo(ProcessNumbersDoFn()).with_outputs(
+                   num_above_100_tag, main=num_below_100_tag))
 
-  # First PCollection
-  results[num_below_100_tag] | 'Log nums below 100' >> Output(prefix='num_below_100: ')
+    # First PCollection
+    results[num_below_100_tag] | 'Log nums below 100' >> Output(
+        prefix='num_below_100: ')
 
-  # Additional PCollection
-  results[num_above_100_tag] | 'Log nums above 100' >> Output(prefix='num_above_100: ')
+    # Additional PCollection
+    results[num_above_100_tag] | 'Log nums above 100' >> Output(
+        prefix='num_above_100: ')

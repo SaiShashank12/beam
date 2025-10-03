@@ -27,25 +27,29 @@
 
 import apache_beam as beam
 
+
 # Output PCollection
 class Output(beam.PTransform):
+
     class _OutputFn(beam.DoFn):
+
         def __init__(self, prefix=''):
             super().__init__()
             self.prefix = prefix
 
         def process(self, element):
-            print(self.prefix+str(element))
+            print(self.prefix + str(element))
 
-    def __init__(self, label=None,prefix=''):
+    def __init__(self, label=None, prefix=''):
         super().__init__(label)
         self.prefix = prefix
 
     def expand(self, input):
         input | beam.ParDo(self._OutputFn(self.prefix))
 
+
 with beam.Pipeline() as p:
-  (p | beam.Create(range(1, 11))
-   # beam.combiners.Count.Globally() to return the count of numbers from `PCollection`.
-   | beam.combiners.Count.Globally()
-   | Output(prefix='Input has elements:'))
+    (p | beam.Create(range(1, 11))
+     # beam.combiners.Count.Globally() to return the count of numbers from `PCollection`.
+     | beam.combiners.Count.Globally()
+     | Output(prefix='Input has elements:'))

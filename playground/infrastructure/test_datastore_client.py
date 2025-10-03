@@ -24,7 +24,6 @@ from config import Origin, Config
 from datastore_client import DatastoreClient, DatastoreException
 from models import SdkEnum
 from test_utils import _get_examples
-
 """
 Unit tests for the Cloud Datastore client
 """
@@ -32,18 +31,19 @@ Unit tests for the Cloud Datastore client
 
 @mock.patch("google.cloud.datastore.Client")
 def test_save_to_cloud_datastore_when_schema_version_not_found(
-    mock_datastore_client
-):
+        mock_datastore_client):
     """
     Test saving examples to the cloud datastore when the schema version not found
     """
     with pytest.raises(
-        DatastoreException,
-        match="Schema versions not found. Schema versions must be downloaded during application startup",
+            DatastoreException,
+            match=
+            "Schema versions not found. Schema versions must be downloaded during application startup",
     ):
         examples = _get_examples(1)
         client = DatastoreClient("MOCK_PROJECT_ID", Config.DEFAULT_NAMESPACE)
-        client.save_to_cloud_datastore(examples, SdkEnum.JAVA, Origin.PG_EXAMPLES)
+        client.save_to_cloud_datastore(examples, SdkEnum.JAVA,
+                                       Origin.PG_EXAMPLES)
 
 
 @pytest.mark.parametrize("is_multifile", [False, True])
@@ -81,10 +81,13 @@ def test_save_to_cloud_datastore_in_the_usual_case(
 
     project_id = "MOCK_PROJECT_ID"
 
-    examples = [create_test_example(is_multifile=is_multifile, with_kafka=with_kafka)]
+    examples = [
+        create_test_example(is_multifile=is_multifile, with_kafka=with_kafka)
+    ]
     client = DatastoreClient(project_id, namespace)
     client.save_to_cloud_datastore(examples, SdkEnum.JAVA, origin)
-    mock_client.assert_called_once_with(namespace=namespace, project=project_id)
+    mock_client.assert_called_once_with(namespace=namespace,
+                                        project=project_id)
     mock_client.assert_called_once()
     mock_get_schema.assert_called_once()
     mock_get_examples.assert_called_once()
@@ -99,38 +102,30 @@ def test_save_to_cloud_datastore_in_the_usual_case(
     if with_kafka:
         calls.append(
             call().key(
-                "pg_datasets", "dataset_id_1"
-            ),  # used in the nested datasets construction
+                "pg_datasets",
+                "dataset_id_1"),  # used in the nested datasets construction
         )
-    calls.extend(
-        [
-            call().put(ANY),
-            call().key("pg_pc_objects", key_prefix + "SDK_JAVA_MOCK_NAME_GRAPH"),
-            call().key("pg_pc_objects", key_prefix + "SDK_JAVA_MOCK_NAME_OUTPUT"),
-            call().key("pg_pc_objects", key_prefix + "SDK_JAVA_MOCK_NAME_LOG"),
-            call().put_multi([ANY, ANY, ANY]),
-            call().key("pg_files", key_prefix + "SDK_JAVA_MOCK_NAME_0"),
-            call().put(ANY),
-        ]
-    )
+    calls.extend([
+        call().put(ANY),
+        call().key("pg_pc_objects", key_prefix + "SDK_JAVA_MOCK_NAME_GRAPH"),
+        call().key("pg_pc_objects", key_prefix + "SDK_JAVA_MOCK_NAME_OUTPUT"),
+        call().key("pg_pc_objects", key_prefix + "SDK_JAVA_MOCK_NAME_LOG"),
+        call().put_multi([ANY, ANY, ANY]),
+        call().key("pg_files", key_prefix + "SDK_JAVA_MOCK_NAME_0"),
+        call().put(ANY),
+    ])
     if is_multifile:
-        calls.extend(
-            [
-                call().key("pg_files", key_prefix + "SDK_JAVA_MOCK_NAME_1"),
-                call().key("pg_files", key_prefix + "SDK_JAVA_MOCK_NAME_2"),
-                call().put_multi([ANY, ANY]),
-            ]
-        )
+        calls.extend([
+            call().key("pg_files", key_prefix + "SDK_JAVA_MOCK_NAME_1"),
+            call().key("pg_files", key_prefix + "SDK_JAVA_MOCK_NAME_2"),
+            call().put_multi([ANY, ANY]),
+        ])
     if with_kafka:
-        calls.extend(
-            [
-                call().key("pg_datasets", "dataset_id_1"),
-                call().put_multi([ANY]),
-            ]
-        )
-    calls.append(
-        call().transaction().__exit__(None, None, None),
-    )
+        calls.extend([
+            call().key("pg_datasets", "dataset_id_1"),
+            call().put_multi([ANY]),
+        ])
+    calls.append(call().transaction().__exit__(None, None, None), )
 
     mock_client.assert_has_calls(calls, any_order=False)
     mock_client.delete_multi.assert_not_called()

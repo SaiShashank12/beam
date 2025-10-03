@@ -13,7 +13,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """This module implements enrichment classes to implement semantic search on Redis Vector DB.
 
 
@@ -58,14 +57,14 @@ class RedisEnrichmentHandler(EnrichmentSourceHandler[beam.Row, beam.Row]):
   """
 
     def __init__(
-            self,
-            redis_host: str,
-            redis_port: int,
-            index_name: str = "embeddings-index",
-            vector_field: str = "text_vector",
-            return_fields: list = ["id", "title", "url", "text"],
-            hybrid_fields: str = "*",
-            k: int = 2,
+        self,
+        redis_host: str,
+        redis_port: int,
+        index_name: str = "embeddings-index",
+        vector_field: str = "text_vector",
+        return_fields: list = ["id", "title", "url", "text"],
+        hybrid_fields: str = "*",
+        k: int = 2,
     ):
         self.redis_host = redis_host
         self.redis_port = redis_port
@@ -95,14 +94,13 @@ class RedisEnrichmentHandler(EnrichmentSourceHandler[beam.Row, beam.Row]):
 
         # Prepare the Query
         base_query = f'{self.hybrid_fields}=>[KNN {self.k} @{self.vector_field} $vector AS vector_score]'
-        query = (
-            Query(base_query)
-                .return_fields(*self.return_fields)
-                .paging(0, self.k)
-                .dialect(2)
-        )
+        query = (Query(base_query).return_fields(*self.return_fields).paging(
+            0, self.k).dialect(2))
 
-        params_dict = {"vector": np.array(embedded_query).astype(dtype=np.float32).tobytes()}
+        params_dict = {
+            "vector":
+            np.array(embedded_query).astype(dtype=np.float32).tobytes()
+        }
 
         # perform vector search
         results = self.client.ft(self.index_name).search(query, params_dict)

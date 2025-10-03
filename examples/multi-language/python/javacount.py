@@ -24,7 +24,6 @@ from apache_beam.io import ReadFromText
 from apache_beam.io import WriteToText
 from apache_beam.transforms.external import ImplicitSchemaPayloadBuilder
 from apache_beam.options.pipeline_options import PipelineOptions
-
 """A Python multi-language pipeline that counts words.
 
 This pipeline reads an input text file and counts the words using the Java SDK
@@ -48,57 +47,52 @@ $ python javacount.py \
       --expansion_service_port <PORT>
 """
 
+
 class WordExtractingDoFn(beam.DoFn):
-  def process(self, element):
-    return re.findall(r'[\w\']+', element, re.UNICODE)
+
+    def process(self, element):
+        return re.findall(r'[\w\']+', element, re.UNICODE)
 
 
 def run(input_path, output_path, expansion_service_port, pipeline_args):
-  pipeline_options = PipelineOptions(pipeline_args)
+    pipeline_options = PipelineOptions(pipeline_args)
 
-  with beam.Pipeline(options=pipeline_options) as p:
-    lines = p | 'Read' >> ReadFromText(input_path).with_output_types(str)
-    words = lines | 'Split' >> (beam.ParDo(WordExtractingDoFn()).with_output_types(str))
+    with beam.Pipeline(options=pipeline_options) as p:
+        lines = p | 'Read' >> ReadFromText(input_path).with_output_types(str)
+        words = lines | 'Split' >> (beam.ParDo(
+            WordExtractingDoFn()).with_output_types(str))
 
-    java_output = (
-        words
-        | 'JavaCount' >> beam.ExternalTransform(
-              'beam:transform:org.apache.beam:javacount:v1',
-              None,
-              ('localhost:%s' % expansion_service_port)))
+        java_output = (words
+                       | 'JavaCount' >> beam.ExternalTransform(
+                           'beam:transform:org.apache.beam:javacount:v1', None,
+                           ('localhost:%s' % expansion_service_port)))
 
-    def format(kv):
-      key, value = kv
-      return '%s:%s' % (key, value)
+        def format(kv):
+            key, value = kv
+            return '%s:%s' % (key, value)
 
-    output = java_output | 'Format' >> beam.Map(format)
-    output | 'Write' >> WriteToText(output_path)
+        output = java_output | 'Format' >> beam.Map(format)
+        output | 'Write' >> WriteToText(output_path)
 
 
 if __name__ == '__main__':
-  logging.getLogger().setLevel(logging.INFO)
-  import argparse
+    logging.getLogger().setLevel(logging.INFO)
+    import argparse
 
-  parser = argparse.ArgumentParser()
-  parser.add_argument(
-      '--input',
-      dest='input',
-      required=True,
-      help='Input file')
-  parser.add_argument(
-      '--output',
-      dest='output',
-      required=True,
-      help='Output file')
-  parser.add_argument(
-      '--expansion_service_port',
-      dest='expansion_service_port',
-      required=True,
-      help='Expansion service port')
-  known_args, pipeline_args = parser.parse_known_args()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--input',
+                        dest='input',
+                        required=True,
+                        help='Input file')
+    parser.add_argument('--output',
+                        dest='output',
+                        required=True,
+                        help='Output file')
+    parser.add_argument('--expansion_service_port',
+                        dest='expansion_service_port',
+                        required=True,
+                        help='Expansion service port')
+    known_args, pipeline_args = parser.parse_known_args()
 
-  run(
-      known_args.input,
-      known_args.output,
-      known_args.expansion_service_port,
-      pipeline_args)
+    run(known_args.input, known_args.output, known_args.expansion_service_port,
+        pipeline_args)

@@ -23,6 +23,7 @@ from test_helper import test_is_not_empty, get_file_output
 
 
 class TestCase(unittest.TestCase):
+
     def test_not_empty(self):
         self.assertTrue(test_is_not_empty(), 'The output is empty')
 
@@ -32,10 +33,11 @@ class TestCase(unittest.TestCase):
         answers = [
             'Person[Henry,Singapore,Singapore]',
             'Person[Jane,San Francisco,United States]',
-            'Person[Lee,Beijing,China]',
-            'Person[John,Sydney,Australia]',
+            'Person[Lee,Beijing,China]', 'Person[John,Sydney,Australia]',
             'Person[Alfred,London,United Kingdom]'
         ]
 
         for ans in answers:
-            self.assertIn(ans, output, "Incorrect output. Enrich the Person's country by the city.")
+            self.assertIn(
+                ans, output,
+                "Incorrect output. Enrich the Person's country by the city.")

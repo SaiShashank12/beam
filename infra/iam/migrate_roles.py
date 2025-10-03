@@ -28,6 +28,7 @@ import roles.generate_roles as generate_roles
 from generate import export_project_iam, to_yaml_file
 from google.cloud.iam_admin_v1 import GetRoleRequest, IAMClient
 
+
 def migrate_permissions(data: list) -> list:
     """
     Migrates permissions from the permissions to the new roles defined on beam_roles/ directory.
@@ -99,17 +100,22 @@ def migrate_permissions(data: list) -> list:
             migrated_entry["permissions"].append({"role": "roles/owner"})
         else:
             if new_roles["beam_admin"]:
-                migrated_entry["permissions"].append({"role": "projects/PROJECT-ID/roles/beam_admin"})
+                migrated_entry["permissions"].append(
+                    {"role": "projects/PROJECT-ID/roles/beam_admin"})
             if new_roles["beam_infra_manager"]:
-                migrated_entry["permissions"].append({"role": "projects/PROJECT-ID/roles/beam_infra_manager"})
+                migrated_entry["permissions"].append(
+                    {"role": "projects/PROJECT-ID/roles/beam_infra_manager"})
             if new_roles["beam_committer"]:
-                migrated_entry["permissions"].append({"role": "projects/PROJECT-ID/roles/beam_committer"})
+                migrated_entry["permissions"].append(
+                    {"role": "projects/PROJECT-ID/roles/beam_committer"})
             if new_roles["beam_viewer"]:
-                migrated_entry["permissions"].append({"role": "projects/PROJECT-ID/roles/beam_viewer"})
+                migrated_entry["permissions"].append(
+                    {"role": "projects/PROJECT-ID/roles/beam_viewer"})
 
         migrated_data.append(migrated_entry)
 
     return migrated_data
+
 
 def get_gcp_role_permissions(role_id: str) -> list:
     """
@@ -126,6 +132,7 @@ def get_gcp_role_permissions(role_id: str) -> list:
     role = client.get_role(request=request)
 
     return list(role.included_permissions)
+
 
 def get_roles_from_file(file_path: str) -> list:
     """
@@ -152,6 +159,7 @@ def get_roles_from_file(file_path: str) -> list:
         })
 
     return roles
+
 
 def permission_differences(project_id: str, user_email: str) -> list:
     """
@@ -230,13 +238,15 @@ def permission_differences(project_id: str, user_email: str) -> list:
             full_role_name = role["role"]
             # Owner is a special case, it should not be migrated to any other role.
             if "roles/owner" in full_role_name:
-                migrated_permissions.extend(get_gcp_role_permissions(full_role_name))
+                migrated_permissions.extend(
+                    get_gcp_role_permissions(full_role_name))
             else:
                 role_name = full_role_name.split('roles/')[1]
                 migrated_permissions.extend(cache[role_name])
 
         user_differences[username]["migrated_roles"] = migrated_roles
-        user_differences[username]["migrated_permissions"] = sorted(migrated_permissions)
+        user_differences[username]["migrated_permissions"] = sorted(
+            migrated_permissions)
 
     # Compare original and migrated permissions
     differences_list = []
@@ -263,6 +273,7 @@ def permission_differences(project_id: str, user_email: str) -> list:
 
     return differences_list
 
+
 def main():
     """
     Main function to run the script.
@@ -271,18 +282,15 @@ def main():
     or generate permission differences for a specified GCP project.
     """
     parser = argparse.ArgumentParser(
-        description="Export IAM policies or generate permission differences for a GCP project."
+        description=
+        "Export IAM policies or generate permission differences for a GCP project."
     )
-    parser.add_argument(
-        "project_id",
-        help="The Google Cloud project ID."
-    )
+    parser.add_argument("project_id", help="The Google Cloud project ID.")
     parser.add_argument(
         "--difference",
         dest="user_email",
         metavar="USER_EMAIL",
-        help="Generate permission differences for the specified user email."
-    )
+        help="Generate permission differences for the specified user email.")
 
     args = parser.parse_args()
 
@@ -291,25 +299,35 @@ def main():
 
     if user_email:
         # If the iam policy has not been generated yet, it will generate the original IAM policy first.
-        if not os.path.exists(f"{project_id}.original-roles.yaml") or not os.path.exists(f"{project_id}.migrated-roles.yaml"):
-            print(f"Original IAM policy for project {project_id} not found. Generating original and migrated roles first.")
+        if not os.path.exists(
+                f"{project_id}.original-roles.yaml") or not os.path.exists(
+                    f"{project_id}.migrated-roles.yaml"):
+            print(
+                f"Original IAM policy for project {project_id} not found. Generating original and migrated roles first."
+            )
 
             print(f"Exporting IAM policy for project {project_id}...")
             iam_data = export_project_iam(project_id)
 
             original_filename = f"{project_id}.original-roles.yaml"
             original_header = f"Exported original IAM policy for project {project_id}"
-            to_yaml_file(iam_data, original_filename, header_info=original_header)
+            to_yaml_file(iam_data,
+                         original_filename,
+                         header_info=original_header)
 
             print("Migrating permissions to new roles...")
             migrated_data = migrate_permissions(iam_data)
             migrated_filename = f"{project_id}.migrated-roles.yaml"
             migrated_header = f"Migrated IAM policy for project {project_id} to new beam_roles"
-            to_yaml_file(migrated_data, migrated_filename, header_info=migrated_header)
+            to_yaml_file(migrated_data,
+                         migrated_filename,
+                         header_info=migrated_header)
 
             print(f"Generated {original_filename} and {migrated_filename}")
 
-        print(f"Generating permission differences for {user_email} in project {project_id}...")
+        print(
+            f"Generating permission differences for {user_email} in project {project_id}..."
+        )
         differences = permission_differences(project_id, user_email)
         if differences:
             output_filename = f"{project_id}.permission-differences.yaml"
@@ -317,7 +335,9 @@ def main():
             to_yaml_file(differences, output_filename, header_info=header)
             print(f"Generated {output_filename}")
         else:
-            print(f"No permission differences found for user {user_email} in project {project_id}.")
+            print(
+                f"No permission differences found for user {user_email} in project {project_id}."
+            )
     else:
         print(f"Exporting IAM policy for project {project_id}...")
         iam_data = export_project_iam(project_id)
@@ -330,10 +350,14 @@ def main():
         migrated_data = migrate_permissions(iam_data)
         migrated_filename = f"{project_id}.migrated-roles.yaml"
         migrated_header = f"Migrated IAM policy for project {project_id} to new beam_roles"
-        to_yaml_file(migrated_data, migrated_filename, header_info=migrated_header)
+        to_yaml_file(migrated_data,
+                     migrated_filename,
+                     header_info=migrated_header)
 
         print(f"Generated {original_filename} and {migrated_filename}")
-        print(f"To generate permission differences, run: python {sys.argv[0]} {project_id} --difference <user_email>")
+        print(
+            f"To generate permission differences, run: python {sys.argv[0]} {project_id} --difference <user_email>"
+        )
 
 
 if __name__ == "__main__":

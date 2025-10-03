@@ -26,11 +26,16 @@ from checker import check_in_allowlist, check_sdk_examples
 @pytest.mark.parametrize(
     "paths, allowlist, result",
     [
-        ([PurePath("path1"), PurePath("path/path2")], [PurePath("path1")], True),
-        ([PurePath("path1"), PurePath("path/path2")], [PurePath("path1")], True),
-        ([PurePath("path1"), PurePath("path/path2")], [PurePath("path")], True),
-        ([PurePath("path1"), PurePath("path/path2")], [PurePath("./path")], True),
-        ([PurePath("path1"), PurePath("./path/path2")], [PurePath("path3")], False),
+        ([PurePath("path1"), PurePath("path/path2")], [PurePath("path1")
+                                                       ], True),
+        ([PurePath("path1"), PurePath("path/path2")], [PurePath("path1")
+                                                       ], True),
+        ([PurePath("path1"), PurePath("path/path2")], [PurePath("path")
+                                                       ], True),
+        ([PurePath("path1"), PurePath("path/path2")], [PurePath("./path")
+                                                       ], True),
+        ([PurePath("path1"), PurePath("./path/path2")], [PurePath("path3")
+                                                         ], False),
     ],
 )
 def test_check_in_allowlist(paths, allowlist, result):
@@ -40,17 +45,18 @@ def test_check_in_allowlist(paths, allowlist, result):
 @pytest.mark.parametrize(
     "paths, sdk, has_tag, isfile, result",
     [
-        ([PurePath("path"), PurePath("path/path2.java")], SDK_JAVA, True, True, True),
-        ([PurePath("path"), PurePath("path/path2.java")], SDK_JAVA, True, False, False),
+        ([PurePath("path"), PurePath("path/path2.java")
+          ], SDK_JAVA, True, True, True),
+        ([PurePath("path"), PurePath("path/path2.java")
+          ], SDK_JAVA, True, False, False),
     ],
 )
 @mock.patch('checker.os.path.isfile')
-def test_check_sdk_examples(mock_os_path_isfile, paths, sdk, has_tag, isfile, result):
+def test_check_sdk_examples(mock_os_path_isfile, paths, sdk, has_tag, isfile,
+                            result):
     checker.get_tag = mock.Mock(return_value=has_tag)
     mock_os_path_isfile.return_value = isfile
     assert result == check_sdk_examples(paths, sdk, "root_dir")
-    mock_os_path_isfile.assert_has_calls(
-        [
-            mock.call(PurePath("root_dir/path/path2.java")),
-        ]
-    )
+    mock_os_path_isfile.assert_has_calls([
+        mock.call(PurePath("root_dir/path/path2.java")),
+    ])

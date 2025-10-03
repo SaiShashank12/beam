@@ -39,6 +39,7 @@ from apache_beam.options.pipeline_options import PipelineOptions
 
 class WordExtractingDoFn(beam.DoFn):
     """Parse each line of input text into words."""
+
     def process(self, element):
         """Returns an iterator over the words of this element.
         The element is a line of text.  If the line is blank, note that, too.
@@ -54,21 +55,21 @@ def run(input_path, output_path, pipeline_args):
     pipeline_options = PipelineOptions(pipeline_args)
 
     with beam.Pipeline(options=pipeline_options) as p:
-      lines = p | 'Read' >> ReadFromText(input_path).with_output_types(str)
-      words = lines | 'Split' >> (beam.ParDo(WordExtractingDoFn()).with_output_types(str))
+        lines = p | 'Read' >> ReadFromText(input_path).with_output_types(str)
+        words = lines | 'Split' >> (beam.ParDo(
+            WordExtractingDoFn()).with_output_types(str))
 
-      java_output = (words
-                | 'JavaCount' >> beam.ExternalTransform(
-            'my.beam.transform.javacount',
-            None,
-            "localhost:12345"))
+        java_output = (
+            words
+            | 'JavaCount' >> beam.ExternalTransform(
+                'my.beam.transform.javacount', None, "localhost:12345"))
 
-      def format(kv):
+        def format(kv):
             key, value = kv
             return '%s:%s' % (key, value)
 
-      output = java_output | 'Format' >> beam.Map(format)
-      output | 'Write' >> WriteToText(output_path)
+        output = java_output | 'Format' >> beam.Map(format)
+        output | 'Write' >> WriteToText(output_path)
 
 
 if __name__ == '__main__':
@@ -76,21 +77,16 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '--input',
-        dest='input',
-        default='input.txt',
-        required=True,
-        help='Input file')
-    parser.add_argument(
-        '--output',
-        dest='output',
-        default='output.txt',
-        required=True,
-        help='Output file')
+    parser.add_argument('--input',
+                        dest='input',
+                        default='input.txt',
+                        required=True,
+                        help='Input file')
+    parser.add_argument('--output',
+                        dest='output',
+                        default='output.txt',
+                        required=True,
+                        help='Output file')
     known_args, pipeline_args = parser.parse_known_args()
 
-    run(
-        known_args.input,
-        known_args.output,
-        pipeline_args)
+    run(known_args.input, known_args.output, pipeline_args)

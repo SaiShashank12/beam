@@ -94,8 +94,8 @@ def pull_from_url(dep, configs):
       if config['license'] == 'skip':
         print('Skip pulling license for ', dep)
       else:
-        url_read = urlopen(Request(config['license'],
-                                   headers={'User-Agent': 'Apache Beam'}))
+        url_read = urlopen(
+            Request(config['license'], headers={'User-Agent': 'Apache Beam'}))
         with open(cur_temp_dir + '/LICENSE', 'wb') as temp_write:
           shutil.copyfileobj(url_read, temp_write)
         logging.debug(
@@ -135,9 +135,13 @@ def license_url(name, project_url, dep_config):
   path = p.path
   if not path.endswith("/"):
     path = path + "/"
-  for license in ("LICENSE", "LICENSE.txt", "LICENSE.md", "LICENSE.rst", "COPYING"):
+  for license in ("LICENSE",
+                  "LICENSE.txt",
+                  "LICENSE.md",
+                  "LICENSE.rst",
+                  "COPYING"):
     try:
-      url = raw + urljoin(path,"master/"+license)
+      url = raw + urljoin(path, "master/" + license)
       with urlopen(url) as a:
         if a.getcode() == 200:
           return url
@@ -190,9 +194,7 @@ if __name__ == "__main__":
     raise RuntimeError(
         'Could not retrieve licences for packages {license_list} in '
         'Python{py_ver} environment. \n {how_to}'.format(
-            py_ver=py_ver,
-            license_list=sorted(no_licenses),
-            how_to=how_to))
+            py_ver=py_ver, license_list=sorted(no_licenses), how_to=how_to))
   else:
     logging.info(
         'Successfully pulled licenses for {n} dependencies'.format(

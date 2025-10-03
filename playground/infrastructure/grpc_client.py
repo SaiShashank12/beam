@@ -12,7 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """
 Module contains the client to communicate with GRPC test Playground server
 """
@@ -38,7 +37,8 @@ class GRPCClient:
         timeout = int(os.getenv(GRPC_TIMEOUT_ENV_VAR_KEY, 30))
         logging.info("grpc timeout: %d", timeout)
         if use_webgrpc:
-            self._channel = sonora.aio.insecure_web_channel(Config.SERVER_ADDRESS)
+            self._channel = sonora.aio.insecure_web_channel(
+                Config.SERVER_ADDRESS)
         else:
             self._channel = grpc.aio.insecure_channel(Config.SERVER_ADDRESS)
 
@@ -54,13 +54,14 @@ class GRPCClient:
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         await self._channel.__aexit__(exc_type, exc_val, exc_tb)
 
-    async def run_code(self, 
+    async def run_code(
+        self,
         code: str,
         sdk: SdkEnum,
         pipeline_options: str,
         datasets: List[api_pb2.Dataset],
         files: List[api_pb2.SnippetFile],
-        ) -> str:
+    ) -> str:
         """
         Run example by his code and SDK
 
@@ -78,8 +79,11 @@ class GRPCClient:
             sdks.remove(api_pb2.Sdk.Name(0))  # del SDK_UNSPECIFIED
             raise Exception(
                 f'Incorrect sdk: must be from this pool: {", ".join(sdks)}')
-        request = api_pb2.RunCodeRequest(
-            code=code, sdk=sdk, pipeline_options=pipeline_options, datasets=datasets, files=files)
+        request = api_pb2.RunCodeRequest(code=code,
+                                         sdk=sdk,
+                                         pipeline_options=pipeline_options,
+                                         datasets=datasets,
+                                         files=files)
         response = await self._stub.RunCode(request, **self._kwargs)
         return response.pipeline_uuid
 
@@ -113,7 +117,8 @@ class GRPCClient:
         response = await self._stub.GetRunError(request, **self._kwargs)
         return response.output
 
-    async def get_run_output(self, pipeline_uuid: str, example_filepath: str) -> str:
+    async def get_run_output(self, pipeline_uuid: str,
+                             example_filepath: str) -> str:
         """
         Get the result of pipeline execution.
 
@@ -166,7 +171,8 @@ class GRPCClient:
 
         return response.output
 
-    async def get_graph(self, pipeline_uuid: str, example_filepath: str) -> str:
+    async def get_graph(self, pipeline_uuid: str,
+                        example_filepath: str) -> str:
         """
         Get the graph of pipeline execution.
 
@@ -182,7 +188,8 @@ class GRPCClient:
         try:
             response = await self._stub.GetGraph(request, **self._kwargs)
             if response.graph == "":
-                logging.warning("Graph for %s wasn't generated", example_filepath)
+                logging.warning("Graph for %s wasn't generated",
+                                example_filepath)
             return response.graph
         except grpc.RpcError:
             logging.warning("Graph for %s wasn't generated", example_filepath)
@@ -201,4 +208,5 @@ class GRPCClient:
         try:
             uuid.UUID(pipeline_uuid)
         except ValueError as ve:
-            raise ValueError(f"Incorrect pipeline uuid: '{pipeline_uuid}'") from ve
+            raise ValueError(
+                f"Incorrect pipeline uuid: '{pipeline_uuid}'") from ve

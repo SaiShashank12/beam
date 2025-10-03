@@ -34,32 +34,37 @@ from apache_beam.transforms import trigger
 
 # Output PCollection
 class Output(beam.PTransform):
+
     class _OutputFn(beam.DoFn):
+
         def __init__(self, prefix=''):
             super().__init__()
             self.prefix = prefix
 
         def process(self, element):
-            print(self.prefix+str(element))
+            print(self.prefix + str(element))
 
-    def __init__(self, label=None,prefix=''):
+    def __init__(self, label=None, prefix=''):
         super().__init__(label)
         self.prefix = prefix
 
     def expand(self, input):
         input | beam.ParDo(self._OutputFn(self.prefix))
 
+
 with beam.Pipeline() as p:
-  processing_time_trigger = trigger.AfterProcessingTime(60)
-# Define an event time trigger
-  event_time_trigger = trigger.AfterWatermark(early=trigger.AfterCount(100),
-                                             late=trigger.AfterCount(200))
+    processing_time_trigger = trigger.AfterProcessingTime(60)
+    # Define an event time trigger
+    event_time_trigger = trigger.AfterWatermark(early=trigger.AfterCount(100),
+                                                late=trigger.AfterCount(200))
 
-# Combine the processing time and event time triggers using the Or method
-  composite_trigger = trigger.AfterAll(processing_time_trigger,event_time_trigger)
+    # Combine the processing time and event time triggers using the Or method
+    composite_trigger = trigger.AfterAll(processing_time_trigger,
+                                         event_time_trigger)
 
-  (p | beam.Create(['Hello Beam','It`s trigger'])
-     | 'window' >>  beam.WindowInto(FixedWindows(2),
-                                                trigger=composite_trigger ,
-                                                accumulation_mode=trigger.AccumulationMode.DISCARDING)
+    (p | beam.Create(['Hello Beam', 'It`s trigger'])
+     | 'window' >> beam.WindowInto(
+         FixedWindows(2),
+         trigger=composite_trigger,
+         accumulation_mode=trigger.AccumulationMode.DISCARDING)
      | 'Log words' >> Output())

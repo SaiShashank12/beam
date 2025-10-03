@@ -28,24 +28,28 @@
 import apache_beam as beam
 from apache_beam import window
 
+
 # Output PCollection
 class Output(beam.PTransform):
+
     class _OutputFn(beam.DoFn):
+
         def __init__(self, prefix=''):
             super().__init__()
             self.prefix = prefix
 
         def process(self, element):
-            print(self.prefix+str(element))
+            print(self.prefix + str(element))
 
-    def __init__(self, label=None,prefix=''):
+    def __init__(self, label=None, prefix=''):
         super().__init__(label)
         self.prefix = prefix
 
     def expand(self, input):
         input | beam.ParDo(self._OutputFn(self.prefix))
 
+
 with beam.Pipeline() as p:
-  (p | beam.Create(['Hello Beam','It`s windowing'])
-     | 'window' >>  beam.WindowInto(window.Sessions(10 * 60))
+    (p | beam.Create(['Hello Beam', 'It`s windowing'])
+     | 'window' >> beam.WindowInto(window.Sessions(10 * 60))
      | 'Log words' >> Output())

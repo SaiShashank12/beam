@@ -24,7 +24,6 @@ from apache_beam.transforms import DoFn
 from apache_beam.transforms import PTransform
 from apache_beam.transforms import Reshuffle
 
-
 import redis
 from typing import Optional
 
@@ -35,9 +34,6 @@ logging.root.setLevel(logging.INFO)
 logger = logging.getLogger(__name__)
 
 __all__ = ['InsertDocInRedis', 'InsertEmbeddingInRedis']
-
-
-
 """This module implements IO classes to read write documents in Redis.
 
 
@@ -66,9 +62,7 @@ class InsertDocInRedis(PTransform):
                  host: str,
                  port: int,
                  command: Optional[str] = None,
-                 batch_size: int = 100
-                 ):
-
+                 batch_size: int = 100):
         """
 
         Args:
@@ -106,8 +100,7 @@ class _InsertDocRedisFn(DoFn):
                  host: str,
                  port: int,
                  command: Optional[str] = None,
-                 batch_size: int = 100
-                 ):
+                 batch_size: int = 100):
         self.host = host
         self.port = port
         self.command = command
@@ -149,32 +142,29 @@ class _InsertDocRedisSink(object):
     and write insertion logic in redis
     """
 
-    def __init__(self,
-                 host: str,
-                 port: int
-                 ):
+    def __init__(self, host: str, port: int):
         self.host = host
         self.port = port
         self.client = None
 
     def _create_client(self):
         if self.client is None:
-            self.client = redis.Redis(host=self.host,
-                                      port=self.port)
+            self.client = redis.Redis(host=self.host, port=self.port)
 
     def write(self, elements):
         self._create_client()
         with self.client.pipeline() as pipe:
-            logger.info(f'Inserting documents in Redis. Total docs: {len(elements)}')
+            logger.info(
+                f'Inserting documents in Redis. Total docs: {len(elements)}')
             for element in elements:
                 doc_key = f"doc_{str(element['id'])}_section_{str(element['section_id'])}"
                 for k, v in element.items():
-                    logger.debug(f'Inserting doc_key={doc_key}, key={k}, value={v}')
+                    logger.debug(
+                        f'Inserting doc_key={doc_key}, key={k}, value={v}')
                     pipe.hset(name=doc_key, key=k, value=v)
 
             pipe.execute()
             logger.info(f'Inserting documents complete.')
-
 
     def execute_command(self, command, elements):
         self._create_client()
@@ -222,9 +212,7 @@ class InsertEmbeddingInRedis(PTransform):
                  port: int,
                  command: Optional[str] = None,
                  batch_size: int = 100,
-                 embedded_columns: list = []
-                 ):
-
+                 embedded_columns: list = []):
         """
 
         Args:
@@ -265,8 +253,7 @@ class _WriteEmbeddingInRedisFn(DoFn):
                  port: int,
                  command: Optional[str] = None,
                  batch_size: int = 100,
-                 embedded_columns: list = []
-                 ):
+                 embedded_columns: list = []):
         self.host = host
         self.port = port
         self.command = command
@@ -289,7 +276,8 @@ class _WriteEmbeddingInRedisFn(DoFn):
         if self.batch_counter == 0:
             return
 
-        with _InsertEmbeddingInRedisSink(self.host, self.port, self.embedded_columns) as sink:
+        with _InsertEmbeddingInRedisSink(self.host, self.port,
+                                         self.embedded_columns) as sink:
 
             if not self.command:
                 sink.write(self.batch)
@@ -306,11 +294,7 @@ class _InsertEmbeddingInRedisSink(object):
     and write text embedding  in redis DB
     """
 
-    def __init__(self,
-                 host: str,
-                 port: int,
-                 embedded_columns: list = []
-                 ):
+    def __init__(self, host: str, port: int, embedded_columns: list = []):
         self.host = host
         self.port = port
         self.client = None
@@ -318,8 +302,7 @@ class _InsertEmbeddingInRedisSink(object):
 
     def _create_client(self):
         if self.client is None:
-            self.client = redis.Redis(host=self.host,
-                                      port=self.port)
+            self.client = redis.Redis(host=self.host, port=self.port)
 
     def write(self, elements):
         self._create_client()

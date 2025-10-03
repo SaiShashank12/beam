@@ -14,7 +14,6 @@
 # KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations
 # under the License.
-
 """Script to recursively patch Colab notebooks.
 Replaces links to point to the master branch and adds a license.
 
@@ -54,43 +53,43 @@ target_branch_repo = 'apache/beam/blob/master'
 
 
 def run(root_dir):
-  for path, dirs, files in os.walk(root_dir):
-    for filename in files:
-      if filename.endswith('.ipynb'):
-        patch_notebook(os.path.join(path, filename))
+    for path, dirs, files in os.walk(root_dir):
+        for filename in files:
+            if filename.endswith('.ipynb'):
+                patch_notebook(os.path.join(path, filename))
 
 
 def patch_notebook(full_path):
-  # Replace the branch repo URL.
-  lines = []
-  with open(full_path) as f:
-    for line in f:
-      if colab_url in line or github_url in line:
-        line = branch_repo_re.sub(target_branch_repo, line)
-      lines += [line]
-  content = ''.join(lines)
+    # Replace the branch repo URL.
+    lines = []
+    with open(full_path) as f:
+        for line in f:
+            if colab_url in line or github_url in line:
+                line = branch_repo_re.sub(target_branch_repo, line)
+            lines += [line]
+    content = ''.join(lines)
 
-  # Add the license block.
-  decoder = json.JSONDecoder(object_pairs_hook=collections.OrderedDict)
-  elements = decoder.decode(content).items()
-  first_key, _ = elements[0]
-  if first_key != 'license':
-    print('Patching {}'.format(full_path))
-    elements.insert(0, ('license', license_text))
+    # Add the license block.
+    decoder = json.JSONDecoder(object_pairs_hook=collections.OrderedDict)
+    elements = decoder.decode(content).items()
+    first_key, _ = elements[0]
+    if first_key != 'license':
+        print('Patching {}'.format(full_path))
+        elements.insert(0, ('license', license_text))
 
-  # Overwrite the file with the new contents.
-  with open(full_path, 'w') as f:
-    json.dump(collections.OrderedDict(elements), f, indent=2)
+    # Overwrite the file with the new contents.
+    with open(full_path, 'w') as f:
+        json.dump(collections.OrderedDict(elements), f, indent=2)
 
 
 if __name__ == '__main__':
-  parser = argparse.ArgumentParser()
-  parser.add_argument(
-      '--root-dir',
-      type=str,
-      default='examples/notebooks',
-      help='Root directory to recursively patch *.ipynb notebooks.',
-  )
-  args = parser.parse_args()
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--root-dir',
+        type=str,
+        default='examples/notebooks',
+        help='Root directory to recursively patch *.ipynb notebooks.',
+    )
+    args = parser.parse_args()
 
-  run(args.root_dir)
+    run(args.root_dir)

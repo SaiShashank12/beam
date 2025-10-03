@@ -102,8 +102,13 @@ def get_dir_symbols_recursive(dir: str) -> Dict[str, Dict[str, List[str]]]:
     return class_names
 
 
-parser = argparse.ArgumentParser(description='Parses a directory with Python files and prints a YAML with symbols.')
-parser.add_argument('dir', metavar='DIR', type=str, help='The directory to parse.')
+parser = argparse.ArgumentParser(
+    description=
+    'Parses a directory with Python files and prints a YAML with symbols.')
+parser.add_argument('dir',
+                    metavar='DIR',
+                    type=str,
+                    help='The directory to parse.')
 args = parser.parse_args()
 
 class_names = get_dir_symbols_recursive(args.dir)
@@ -111,8 +116,7 @@ class_names = dict(
     sorted(
         class_names.items(),
         key=lambda pair: pair[0].lower(),
-    )
-)
+    ))
 
 print(
     yaml.dump(

@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
- # Tests for generate_roles.py
+# Tests for generate_roles.py
 
 import unittest
 from unittest.mock import MagicMock
@@ -27,7 +27,9 @@ sys.modules['yaml'] = MagicMock()
 sys.modules['google.cloud'] = types.SimpleNamespace(iam_admin_v1=MagicMock())
 sys.modules['google.api_core'] = types.SimpleNamespace(exceptions=MagicMock())
 
+
 class TestGenerateRoles(unittest.TestCase):
+
     def test_filter_permissions(self):
         perms = [
             'compute.instances.create',
@@ -77,6 +79,7 @@ class TestGenerateRoles(unittest.TestCase):
             self.assertIn('role_id', content)
             self.assertIn('a.b.c', content)
             self.assertIn('d.e.f', content)
+
 
 if __name__ == '__main__':
     unittest.main()

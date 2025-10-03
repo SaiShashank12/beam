@@ -12,7 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """
 Module implements check to define if it is needed to run CI step for Beam
 Playground examples
@@ -57,7 +56,8 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def check_in_allowlist(paths: List[PurePath], allowlist: List[PurePath]) -> bool:
+def check_in_allowlist(paths: List[PurePath],
+                       allowlist: List[PurePath]) -> bool:
     """Check if any of allowlist paths affected"""
     for path in paths:
         logging.debug("check if allowlisted: %s", path)
@@ -88,19 +88,25 @@ def check_sdk_examples(paths: List[PurePath], sdk: Sdk, root_dir: str) -> bool:
             return True
     return False
 
+
 def main():
     args = parse_args()
 
     root_dir = os.getenv(BEAM_ROOT_DIR_ENV_VAR_KEY)
     if root_dir is None:
-        raise KeyError(f"{BEAM_ROOT_DIR_ENV_VAR_KEY} environment variable should be specified in os")
+        raise KeyError(
+            f"{BEAM_ROOT_DIR_ENV_VAR_KEY} environment variable should be specified in os"
+        )
     categories_file = os.getenv(BEAM_EXAMPLE_CATEGORIES_ENV_VAR_KEY)
     if categories_file is None:
-        raise KeyError(f"{BEAM_EXAMPLE_CATEGORIES_ENV_VAR_KEY} environment variable should be specified in os")
+        raise KeyError(
+            f"{BEAM_EXAMPLE_CATEGORIES_ENV_VAR_KEY} environment variable should be specified in os"
+        )
 
     load_supported_categories(categories_file)
 
-    logging.basicConfig(level=logging.DEBUG if args.verbose else logging.WARNING)
+    logging.basicConfig(
+        level=logging.DEBUG if args.verbose else logging.WARNING)
 
     if check_in_allowlist(args.paths, args.allowlist):
         return

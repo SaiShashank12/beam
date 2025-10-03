@@ -24,7 +24,6 @@
 #   complexity: ADVANCED
 #   tags:
 #     - hellobeam
-
 """
 The idea behind this code is to read data from a BigQuery table,
 process it in some way (although the example provided doesn't perform any significant transformations beyond type conversion),
@@ -40,17 +39,20 @@ import apache_beam as beam
 
 def create_random_record(record_id):
     return {
-        'kind': 'kind' + record_id,
-        'fullName': 'fullName' + record_id,
-        'age': int(record_id) * 10,
-        'gender': 'male',
+        'kind':
+        'kind' + record_id,
+        'fullName':
+        'fullName' + record_id,
+        'age':
+        int(record_id) * 10,
+        'gender':
+        'male',
         'phoneNumber': {
             'areaCode': int(record_id) * 100,
             'number': int(record_id) * 100000
         },
         'children': [
-            'child' + record_id + '1',
-            'child' + record_id + '2',
+            'child' + record_id + '1', 'child' + record_id + '2',
             'child' + record_id + '3'
         ]
     }
@@ -58,27 +60,28 @@ def create_random_record(record_id):
 
 def run(argv=None):
     with beam.Pipeline() as p:
-      table_schema = bigquery.TableSchema()
+        table_schema = bigquery.TableSchema()
 
-      # Fields that use standard types.
-      # The destination table schema is a list of three fields ("id", "name", and "age"), matching the fields of the User objects (as implemented in getSchema).
-      kind_schema = bigquery.TableFieldSchema()
-      kind_schema.name = 'kind'
-      kind_schema.type = 'string'
-      kind_schema.mode = 'nullable'
-      table_schema.fields.append(kind_schema)
+        # Fields that use standard types.
+        # The destination table schema is a list of three fields ("id", "name", and "age"), matching the fields of the User objects (as implemented in getSchema).
+        kind_schema = bigquery.TableFieldSchema()
+        kind_schema.name = 'kind'
+        kind_schema.type = 'string'
+        kind_schema.mode = 'nullable'
+        table_schema.fields.append(kind_schema)
 
-      full_name_schema = bigquery.TableFieldSchema()
-      full_name_schema.name = 'fullName'
-      full_name_schema.type = 'string'
-      full_name_schema.mode = 'required'
-      table_schema.fields.append(full_name_schema)
+        full_name_schema = bigquery.TableFieldSchema()
+        full_name_schema.name = 'fullName'
+        full_name_schema.type = 'string'
+        full_name_schema.mode = 'required'
+        table_schema.fields.append(full_name_schema)
 
-      # The write operation is configured to create the destination table if it does not already exist (CREATE_IF_NEEDED) and to replace any existing data in the destination table (WRITE_TRUNCATE).
-      # pylint: disable=expression-not-assigned
-      record_ids = p | 'CreateIDs' >> beam.Create(['1', '2', '3', '4', '5'])
-      records = record_ids | 'CreateRecords' >> beam.Map(create_random_record)
-      """
+        # The write operation is configured to create the destination table if it does not already exist (CREATE_IF_NEEDED) and to replace any existing data in the destination table (WRITE_TRUNCATE).
+        # pylint: disable=expression-not-assigned
+        record_ids = p | 'CreateIDs' >> beam.Create(['1', '2', '3', '4', '5'])
+        records = record_ids | 'CreateRecords' >> beam.Map(
+            create_random_record)
+        """
         records | 'write' >> beam.io.WriteToBigQuery(
           'output.txt',
           schema=table_schema,

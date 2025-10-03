@@ -30,7 +30,9 @@ import apache_beam as beam
 
 # Output PCollection
 class Output(beam.PTransform):
+
     class _OutputFn(beam.DoFn):
+
         def __init__(self, prefix=''):
             super().__init__()
             self.prefix = prefix
@@ -47,9 +49,9 @@ class Output(beam.PTransform):
 
 
 with beam.Pipeline() as p:
-  parts = p | 'Log words' >> beam.io.ReadFromText('gs://apache-beam-samples/game/small/gaming_data.csv') \
-            | beam.combiners.Sample.FixedSizeGlobally(100) \
-            | beam.FlatMap(lambda line: line) \
-            | beam.Map(lambda line: (line.split(',')[1], int(line.split(',')[2]))) \
-            | beam.CombinePerKey(sum) \
-            | Output()
+    parts = p | 'Log words' >> beam.io.ReadFromText('gs://apache-beam-samples/game/small/gaming_data.csv') \
+              | beam.combiners.Sample.FixedSizeGlobally(100) \
+              | beam.FlatMap(lambda line: line) \
+              | beam.Map(lambda line: (line.split(',')[1], int(line.split(',')[2]))) \
+              | beam.CombinePerKey(sum) \
+              | Output()

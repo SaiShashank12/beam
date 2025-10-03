@@ -23,6 +23,7 @@ from test_helper import test_is_not_empty, get_file_output
 
 
 class TestCase(unittest.TestCase):
+
     def test_not_empty(self):
         self.assertTrue(test_is_not_empty(), 'The output is empty')
 
@@ -30,17 +31,11 @@ class TestCase(unittest.TestCase):
         output = get_file_output(path='task.py')
 
         answers = [
-            'AUSTRALIA',
-            'CHINA',
-            'ENGLAND',
-            'FRANCE',
-            'GERMANY',
-            'INDONESIA',
-            'JAPAN',
-            'MEXICO',
-            'SINGAPORE',
-            'UNITED STATES'
+            'AUSTRALIA', 'CHINA', 'ENGLAND', 'FRANCE', 'GERMANY', 'INDONESIA',
+            'JAPAN', 'MEXICO', 'SINGAPORE', 'UNITED STATES'
         ]
 
         for num in answers:
-            self.assertIn(num, output, "Incorrect output. Convert each country name to uppercase.")
+            self.assertIn(
+                num, output,
+                "Incorrect output. Convert each country name to uppercase.")

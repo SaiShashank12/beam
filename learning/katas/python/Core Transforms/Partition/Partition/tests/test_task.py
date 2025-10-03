@@ -23,6 +23,7 @@ from test_helper import test_is_not_empty, get_file_output
 
 
 class TestCase(unittest.TestCase):
+
     def test_not_empty(self):
         self.assertTrue(test_is_not_empty(), 'The output is empty')
 
@@ -41,4 +42,6 @@ class TestCase(unittest.TestCase):
             answers.append('Number <= 100: ' + num)
 
         for ans in answers:
-            self.assertIn(ans, output, "Incorrect output. Partition the numbers accordingly.")
+            self.assertIn(
+                ans, output,
+                "Incorrect output. Partition the numbers accordingly.")

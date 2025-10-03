@@ -29,13 +29,16 @@
 
 import apache_beam as beam
 
+
 def print_lines(line):
     print(line)
+
 
 p = beam.Pipeline()
 
 data = ['Hello, World!', 'Apache Beam']
 
-p | 'CreateMyData' >> beam.Create(data) | 'WriteMyFile' >> beam.io.WriteToText(file_path_prefix='myfile.txt',shard_name_template='')
+p | 'CreateMyData' >> beam.Create(data) | 'WriteMyFile' >> beam.io.WriteToText(
+    file_path_prefix='myfile.txt', shard_name_template='')
 
 p.run().wait_until_finish()

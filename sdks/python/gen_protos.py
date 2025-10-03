@@ -318,6 +318,7 @@ def find_by_ext(root_dir, ext):
       if file.endswith(ext):
         yield clean_path(os.path.join(root, file))
 
+
 def build_relative_import(root_path, import_path, start_file_path):
   tail_path = import_path.replace('.', os.path.sep)
   source_path = os.path.join(root_path, tail_path)
@@ -450,9 +451,9 @@ def generate_proto_files(force=False):
     regenerate_reason = 'no output files'
   elif len(out_files) < len(proto_files):
     regenerate_reason = 'not enough output files'
-  elif (min(os.path.getmtime(path) for path in out_files) <= max(
-      os.path.getmtime(path)
-      for path in proto_files + [os.path.realpath(__file__)])):
+  elif (min(os.path.getmtime(path) for path in out_files)
+        <= max(os.path.getmtime(path)
+               for path in proto_files + [os.path.realpath(__file__)])):
     regenerate_reason = 'output files are out-of-date'
   elif len(out_files) > len(proto_files):
     regenerate_reason = 'output files without corresponding .proto files'
@@ -478,15 +479,14 @@ def generate_proto_files(force=False):
       [sys.executable] +  # expecting to be called from command line
       ['--proto_path=%s' % builtin_protos] +
       ['--proto_path=%s' % d
-      for d in proto_dirs] + ['--python_out=%s' % PYTHON_OUTPUT_PATH] +
+       for d in proto_dirs] + ['--python_out=%s' % PYTHON_OUTPUT_PATH] +
       ['--plugin=protoc-gen-mypy=%s' % protoc_gen_mypy] +
       # new version of mypy-protobuf converts None to zero default value
       # and remove Optional from the param type annotation. This causes
       # some mypy errors. So to mitigate and fall back to old behavior,
       # use `relax_strict_optional_primitives` flag. more at
       # https://github.com/nipunn1313/mypy-protobuf/tree/main#relax_strict_optional_primitives # pylint:disable=line-too-long
-      ['--mypy_out=relax_strict_optional_primitives:%s' % PYTHON_OUTPUT_PATH
-      ] +
+      ['--mypy_out=relax_strict_optional_primitives:%s' % PYTHON_OUTPUT_PATH] +
       # TODO(robertwb): Remove the prefix once it's the default.
       ['--grpc_python_out=grpc_2_0:%s' % PYTHON_OUTPUT_PATH] + proto_files)
 
@@ -506,7 +506,7 @@ def generate_proto_files(force=False):
   # force relative import paths for proto files
   compiled_import_re = re.compile('^from (.*) import (.*)$')
   for file_path in find_by_ext(PYTHON_OUTPUT_PATH,
-                              ('_pb2.py', '_pb2_grpc.py', '_pb2.pyi')):
+                               ('_pb2.py', '_pb2_grpc.py', '_pb2.pyi')):
     proto_packages.add(os.path.dirname(file_path))
     lines = []
     with open(file_path, encoding='utf-8') as f:

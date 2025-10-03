@@ -64,12 +64,10 @@ class Verifier:
         asyncio.run(self._run_and_verify(examples))
         logging.info("Finish of executing Playground examples")
 
-    async def _get_statuses(
-            self,
-            client: GRPCClient,
-            examples: List[Example],
-            concurrency: int = 10
-    ):
+    async def _get_statuses(self,
+                            client: GRPCClient,
+                            examples: List[Example],
+                            concurrency: int = 10):
         """
         Receive status and update example.status and example.pipeline_id for
         each example
@@ -97,7 +95,8 @@ class Verifier:
 
         for example in examples:
             if example.tag.never_run:
-                logging.info("skipping non runnable example %s", example.filepath)
+                logging.info("skipping non runnable example %s",
+                             example.filepath)
             else:
                 tasks.append(_semaphored_task(example))
         await tqdm.gather(*tasks)
@@ -109,7 +108,8 @@ class Verifier:
             example: beam example that should be verified
         """
         if example.tag.never_run:
-            logging.info("populating example fields from provided files %s", example.filepath)
+            logging.info("populating example fields from provided files %s",
+                         example.filepath)
             self._populate_from_repo(example)
         else:
             await self._populate_from_runner(example, client)
@@ -140,17 +140,18 @@ class Verifier:
         if compile_output_file_path.exists():
             example.compile_output = compile_output_file_path.read_text()
 
-    async def _populate_from_runner(self, example: Example, client: GRPCClient):
+    async def _populate_from_runner(self, example: Example,
+                                    client: GRPCClient):
         try:
             example.compile_output = await client.get_compile_output(
-                example.pipeline_id
-            )
-            example.output = await client.get_run_output(example.pipeline_id, example.filepath)
-            example.logs = await client.get_log(example.pipeline_id, example.filepath)
+                example.pipeline_id)
+            example.output = await client.get_run_output(
+                example.pipeline_id, example.filepath)
+            example.logs = await client.get_log(example.pipeline_id,
+                                                example.filepath)
             if example.sdk in [SDK_JAVA, SDK_PYTHON]:
-                example.graph = await client.get_graph(
-                    example.pipeline_id, example.filepath
-                )
+                example.graph = await client.get_graph(example.pipeline_id,
+                                                       example.filepath)
         except Exception as e:
             logging.error(example.url_vcs)
             logging.error(example.compile_output)
@@ -169,13 +170,12 @@ class Verifier:
 
         async with GRPCClient() as client:
             await self._get_statuses(
-                client, examples
-            )  # run examples code and wait until all are executed
+                client,
+                examples)  # run examples code and wait until all are executed
             await self._verify_examples(client, examples, self._origin)
 
-    async def _verify_examples(
-        self, client: GRPCClient, examples: List[Example], origin: Origin
-    ):
+    async def _verify_examples(self, client: GRPCClient,
+                               examples: List[Example], origin: Origin):
         """
         Verify statuses of beam examples and the number of found default examples.
 
@@ -201,25 +201,25 @@ class Verifier:
                 count_of_verified += 1
                 continue
             if example.status == STATUS_VALIDATION_ERROR:
-                logging.error("Example: %s has validation error", example.filepath)
+                logging.error("Example: %s has validation error",
+                              example.filepath)
             elif example.status == STATUS_PREPARATION_ERROR:
-                logging.error("Example: %s has preparation error", example.filepath)
+                logging.error("Example: %s has preparation error",
+                              example.filepath)
             elif example.status == STATUS_ERROR:
-                logging.error(
-                    "Example: %s has error during setup run builder", example.filepath
-                )
+                logging.error("Example: %s has error during setup run builder",
+                              example.filepath)
             elif example.status == STATUS_RUN_TIMEOUT:
-                logging.error("Example: %s failed because of timeout", example.filepath)
+                logging.error("Example: %s failed because of timeout",
+                              example.filepath)
             elif example.status == STATUS_COMPILE_ERROR:
                 err = await client.get_compile_output(example.pipeline_id)
-                logging.error(
-                    "Example: %s has compilation error: %s", example.filepath, err
-                )
+                logging.error("Example: %s has compilation error: %s",
+                              example.filepath, err)
             elif example.status == STATUS_RUN_ERROR:
                 err = await client.get_run_error(example.pipeline_id)
-                logging.error(
-                    "Example: %s has execution error: %s", example.filepath, err
-                )
+                logging.error("Example: %s has execution error: %s",
+                              example.filepath, err)
             verify_status_failed = True
 
         logging.info(
@@ -238,17 +238,17 @@ class Verifier:
                 logging.error("Default example not found")
                 raise VerifyException(
                     "CI step failed due to finding an incorrect number "
-                    "of default examples. Default example not found"
-                )
+                    "of default examples. Default example not found")
             if len(default_examples) > 1:
                 logging.error("Many default examples found")
-                logging.error("Examples where the default_example field is true:")
+                logging.error(
+                    "Examples where the default_example field is true:")
                 for example in default_examples:
                     logging.error(example.filepath)
                 raise VerifyException(
                     "CI step failed due to finding an incorrect number "
-                    "of default examples. Many default examples found"
-                )
+                    "of default examples. Many default examples found")
 
         if verify_status_failed:
-            raise VerifyException("CI step failed due to errors in the examples")
+            raise VerifyException(
+                "CI step failed due to errors in the examples")

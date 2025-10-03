@@ -28,17 +28,20 @@
 import apache_beam as beam
 from apache_beam import pvalue
 
+
 # Output PCollection
 class Output(beam.PTransform):
+
     class _OutputFn(beam.DoFn):
+
         def __init__(self, prefix=''):
             super().__init__()
             self.prefix = prefix
 
         def process(self, element):
-            print(self.prefix+str(element))
+            print(self.prefix + str(element))
 
-    def __init__(self, label=None,prefix=''):
+    def __init__(self, label=None, prefix=''):
         super().__init__(label)
         self.prefix = prefix
 
@@ -46,37 +49,43 @@ class Output(beam.PTransform):
         input | beam.ParDo(self._OutputFn(self.prefix))
 
 
-
 class StartWithLetter(beam.DoFn):
+
     def __init__(self, letter=''):
         self.letter = letter
+
     def process(self, element):
-        if(element.lower().startswith(self.letter)):
+        if (element.lower().startswith(self.letter)):
             yield element
 
+
 class ExtractAndCountWord(beam.PTransform):
+
     def expand(self, pcoll):
         return (pcoll)
 
+
 class ProcessNumbersDoFn(beam.DoFn):
+
     def process(self, element):
         yield element
 
 
 class EnrichCountryDoFn(beam.DoFn):
+
     def process(self, element, wordWithLowerCase):
         yield element
 
 
 with beam.Pipeline() as p:
-  # ExtractAndCountWord
-  # ParDo ProcessNumbersDoFn with tags
-  # Result by tags compare with EnrichCountryDoFn
-  results = (p | 'Log words' >> beam.io.ReadFromText('gs://apache-beam-samples/shakespeare/kinglear.txt') \
-            | beam.combiners.Sample.FixedSizeGlobally(100) \
-            | beam.FlatMap(lambda line: line) \
-            | beam.FlatMap(lambda sentence: sentence.split()) \
-            | beam.Filter(lambda word: not word.isspace() or word.isalnum()) \
-            )
+    # ExtractAndCountWord
+    # ParDo ProcessNumbersDoFn with tags
+    # Result by tags compare with EnrichCountryDoFn
+    results = (p | 'Log words' >> beam.io.ReadFromText('gs://apache-beam-samples/shakespeare/kinglear.txt') \
+              | beam.combiners.Sample.FixedSizeGlobally(100) \
+              | beam.FlatMap(lambda line: line) \
+              | beam.FlatMap(lambda sentence: sentence.split()) \
+              | beam.Filter(lambda word: not word.isspace() or word.isalnum()) \
+              )
 
-  results | Output()
+    results | Output()

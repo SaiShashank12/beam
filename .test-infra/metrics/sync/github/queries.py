@@ -8,8 +8,6 @@
 #
 #    http://www.apache.org/licenses/LICENSE-2.0
 #
-
-
 '''
 This query is used to fetch PR data from github via Github API v4 (GraphQL).
 Returns PRs on apache/beam repo that are older than provided timestamp.
@@ -114,7 +112,6 @@ query {
   }
 }
 '''
-
 '''
 This query is used to fetch issue data from github via Github API v4 (GraphQL).
 Returns issues on apache/beam repo that are older than provided timestamp.

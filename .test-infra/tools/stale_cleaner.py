@@ -31,7 +31,7 @@ PUBSUB_SUBSCRIPTION_RESOURCE = "pubsub_subscription"
 STORAGE_PREFIX = "stale_cleaner/"
 
 # Project constants
-PROJECT_PATH_PREFIX = "projects/" # Prefix for the project path in GCP *This is not the project id*
+PROJECT_PATH_PREFIX = "projects/"  # Prefix for the project path in GCP *This is not the project id*
 
 # Time constants (in seconds)
 DEFAULT_PUBSUB_TOPIC_THRESHOLD = 86400  # 1 day
@@ -42,26 +42,32 @@ DEFAULT_TIME_THRESHOLD = 3600  # 1 hour
 DEFAULT_PROJECT_ID = "apache-beam-testing"
 DEFAULT_BUCKET_NAME = "apache-beam-testing-pabloem"
 
+
 class Clock:
     """
     Clock is an abstract class that returns the current datetime.
     It is used to get the current time in the application.
     """
+
     def __call__(self) -> datetime.datetime:
         raise NotImplementedError("Subclasses must implement __call__ method")
+
 
 class RealClock(Clock):
     """
     RealClock is a class that returns the current datetime.
     """
+
     def __call__(self) -> datetime.datetime:
         return datetime.datetime.now()
+
 
 class FakeClock(Clock):
     """
     FakeClock is a class that returns a fixed datetime.
     It is used for testing purposes.
     """
+
     def __init__(self, datetime_str: str) -> None:
         self.clock = datetime.datetime.fromisoformat(datetime_str)
 
@@ -74,18 +80,24 @@ class FakeClock(Clock):
         """
         self.clock = datetime.datetime.fromisoformat(datetime_str)
 
+
 class GoogleCloudResource:
     """
     GoogleCloudResource is a class used to store the GCP resource information of name and type
     including the creation date and last check date.
     """
-    def __init__(self, resource_name: str, creation_date: datetime.datetime = None,
-                    last_update_date: datetime.datetime = None, clock: Clock = None) -> None:
+
+    def __init__(self,
+                 resource_name: str,
+                 creation_date: datetime.datetime = None,
+                 last_update_date: datetime.datetime = None,
+                 clock: Clock = None) -> None:
         self.resource_name = resource_name
-        effective_clock = clock or RealClock() # Use provided clock or RealClock
+        effective_clock = clock or RealClock(
+        )  # Use provided clock or RealClock
         current_time = effective_clock()
-        self.creation_date = creation_date or current_time # Date of first appearance of the resource
-        self.last_update_date = last_update_date or current_time # Date of last existence check
+        self.creation_date = creation_date or current_time  # Date of first appearance of the resource
+        self.last_update_date = last_update_date or current_time  # Date of last existence check
 
     def __str__(self) -> str:
         return f"{self.resource_name}"
@@ -111,6 +123,7 @@ class GoogleCloudResource:
         effective_clock = clock or RealClock()
         return (effective_clock() - self.creation_date).total_seconds()
 
+
 class StaleCleaner:
     """
     StaleCleaner is a class that is used to detect stale resources in the Google Cloud Platform.
@@ -132,9 +145,13 @@ class StaleCleaner:
     """
 
     # Create a new StaleCleaner object
-    def __init__(self, project_id: str, resource_type: str, bucket_name: str,
-                    prefixes: list = None, time_threshold: int = DEFAULT_TIME_THRESHOLD,
-                    clock: Clock = None) -> None:
+    def __init__(self,
+                 project_id: str,
+                 resource_type: str,
+                 bucket_name: str,
+                 prefixes: list = None,
+                 time_threshold: int = DEFAULT_TIME_THRESHOLD,
+                 clock: Clock = None) -> None:
         self.project_id = project_id
         self.project_path = f"{PROJECT_PATH_PREFIX}{project_id}"
         self.resource_type = resource_type
@@ -170,7 +187,9 @@ class StaleCleaner:
         blob_json = json.dumps(resource_dict, indent=4)
 
         blob.upload_from_string(blob_json, content_type="application/json")
-        print(f"{self.clock()} - Resources written to {self.bucket_name}/{STORAGE_PREFIX}{self.resource_type}.json")
+        print(
+            f"{self.clock()} - Resources written to {self.bucket_name}/{STORAGE_PREFIX}{self.resource_type}.json"
+        )
 
     def _stored_resources(self) -> dict:
         """
@@ -181,7 +200,9 @@ class StaleCleaner:
         blob = bucket.blob(f"{STORAGE_PREFIX}{self.resource_type}.json")
 
         if not blob.exists():
-            print(f"{self.clock()} - Blob {self.bucket_name}/{STORAGE_PREFIX}{self.resource_type}.json does not exist.")
+            print(
+                f"{self.clock()} - Blob {self.bucket_name}/{STORAGE_PREFIX}{self.resource_type}.json does not exist."
+            )
             return {}
 
         blob_string = blob.download_as_text()
@@ -192,10 +213,11 @@ class StaleCleaner:
         for k, v in blob_dict.items():
             resources[k] = GoogleCloudResource(
                 resource_name=v["resource_name"],
-                creation_date=datetime.datetime.fromisoformat(v["creation_date"]),
-                last_update_date=datetime.datetime.fromisoformat(v["last_update_date"]),
-                clock=self.clock
-            )
+                creation_date=datetime.datetime.fromisoformat(
+                    v["creation_date"]),
+                last_update_date=datetime.datetime.fromisoformat(
+                    v["last_update_date"]),
+                clock=self.clock)
         return resources
 
     def refresh(self) -> None:
@@ -213,11 +235,12 @@ class StaleCleaner:
 
         for k, v in list(stored_resources.items()):
             if k not in active_resources:
-                print(f"{self.clock()} - Resource {k} is no longer alive. Deleting it from the stored resources.")
+                print(
+                    f"{self.clock()} - Resource {k} is no longer alive. Deleting it from the stored resources."
+                )
                 del stored_resources[k]
             else:
                 v.update(clock=self.clock)
-
 
         for k, v in active_resources.items():
             if k not in stored_resources:
@@ -274,12 +297,15 @@ class StaleCleaner:
         for k, v in stale_resources_map.items():
             if k in active_resources_map:
                 if dry_run:
-                    print(f"{self.clock()} - Dry run: Would delete resource {k}")
+                    print(
+                        f"{self.clock()} - Dry run: Would delete resource {k}")
                 else:
                     print(f"{self.clock()} - Deleting resource {k}")
                     self._delete_resource(k)
             else:
-                print(f"{self.clock()} - Resource {k} marked as stale but no longer exists in GCP. Skipping deletion.")
+                print(
+                    f"{self.clock()} - Resource {k} marked as stale but no longer exists in GCP. Skipping deletion."
+                )
 
         if not dry_run:
             self.refresh()
@@ -293,24 +319,34 @@ class PubSubTopicCleaner(StaleCleaner):
     It also applies prefix filtering to only delete topics that match the specified prefixes.
     """
 
-    def __init__(self, project_id: str, bucket_name: str,
-                    prefixes: list = None, time_threshold: int = DEFAULT_PUBSUB_TOPIC_THRESHOLD,
-                    clock: Clock = None) -> None:
-        super().__init__(project_id, PUBSUB_TOPIC_RESOURCE, bucket_name, prefixes, time_threshold, clock)
+    def __init__(self,
+                 project_id: str,
+                 bucket_name: str,
+                 prefixes: list = None,
+                 time_threshold: int = DEFAULT_PUBSUB_TOPIC_THRESHOLD,
+                 clock: Clock = None) -> None:
+        super().__init__(project_id, PUBSUB_TOPIC_RESOURCE, bucket_name,
+                         prefixes, time_threshold, clock)
         self.client = pubsub_v1.PublisherClient()
 
     def _active_resources(self) -> dict:
         d = {}
-        for topic in self.client.list_topics(request={"project": self.project_path}):
+        for topic in self.client.list_topics(
+                request={"project": self.project_path}):
             topic_name = topic.name
             # Apply prefix filtering if prefixes are defined
-            if not self.prefixes or any(topic_name.startswith(f"{self.project_path}/topics/{prefix}") for prefix in self.prefixes):
-                d[topic_name] = GoogleCloudResource(resource_name=topic_name, clock=self.clock)
+            if not self.prefixes or any(
+                    topic_name.startswith(
+                        f"{self.project_path}/topics/{prefix}")
+                    for prefix in self.prefixes):
+                d[topic_name] = GoogleCloudResource(resource_name=topic_name,
+                                                    clock=self.clock)
         return d
 
     def _delete_resource(self, resource_name: str) -> None:
         print(f"{self.clock()} - Deleting PubSub topic {resource_name}")
         self.client.delete_topic(request={"topic": resource_name})
+
 
 # PubSub Subscription cleaner
 class PubSubSubscriptionCleaner(StaleCleaner):
@@ -322,10 +358,14 @@ class PubSubSubscriptionCleaner(StaleCleaner):
     If it is detached, it will be considered stale and eligible for deletion.
     """
 
-    def __init__(self, project_id: str, bucket_name: str,
-                    prefixes: list = None, time_threshold: int = DEFAULT_PUBSUB_SUBSCRIPTION_THRESHOLD,
-                    clock: Clock = None) -> None:
-        super().__init__(project_id, PUBSUB_SUBSCRIPTION_RESOURCE, bucket_name, prefixes, time_threshold, clock)
+    def __init__(self,
+                 project_id: str,
+                 bucket_name: str,
+                 prefixes: list = None,
+                 time_threshold: int = DEFAULT_PUBSUB_SUBSCRIPTION_THRESHOLD,
+                 clock: Clock = None) -> None:
+        super().__init__(project_id, PUBSUB_SUBSCRIPTION_RESOURCE, bucket_name,
+                         prefixes, time_threshold, clock)
         self.client = None  # Will be initialized in each method that needs it
 
     def _active_resources(self) -> dict:
@@ -333,13 +373,18 @@ class PubSubSubscriptionCleaner(StaleCleaner):
         self.client = pubsub_v1.SubscriberClient()
 
         with self.client:
-            for subscription in self.client.list_subscriptions(request={"project": self.project_path}):
+            for subscription in self.client.list_subscriptions(
+                    request={"project": self.project_path}):
                 subscription_name = subscription.name
                 # Apply prefix filtering if prefixes are defined
-                if not self.prefixes or any(subscription_name.startswith(f"{self.project_path}/subscriptions/{prefix}") for prefix in self.prefixes):
+                if not self.prefixes or any(
+                        subscription_name.startswith(
+                            f"{self.project_path}/subscriptions/{prefix}")
+                        for prefix in self.prefixes):
                     # Check if the subscription has a topic associated with it
                     if subscription.detached:
-                        d[subscription_name] = GoogleCloudResource(resource_name=subscription_name, clock=self.clock)
+                        d[subscription_name] = GoogleCloudResource(
+                            resource_name=subscription_name, clock=self.clock)
 
         return d
 
@@ -347,8 +392,11 @@ class PubSubSubscriptionCleaner(StaleCleaner):
         self.client = pubsub_v1.SubscriberClient()
         print(f"{self.clock()} - Deleting PubSub subscription {resource_name}")
         with self.client:
-            subscription_path = self.client.subscription_path(self.project_id, resource_name)
-            self.client.delete_subscription(request={"subscription": subscription_path})
+            subscription_path = self.client.subscription_path(
+                self.project_id, resource_name)
+            self.client.delete_subscription(
+                request={"subscription": subscription_path})
+
 
 def clean_pubsub_topics():
     """ Clean up stale PubSub topics in the specified GCP project.
@@ -398,14 +446,17 @@ def clean_pubsub_topics():
     ]
 
     # Create a PubSubTopicCleaner instance
-    cleaner = PubSubTopicCleaner(project_id=project_id, bucket_name=bucket_name,
-                                 prefixes=prefixes, time_threshold=DEFAULT_PUBSUB_TOPIC_THRESHOLD)
+    cleaner = PubSubTopicCleaner(project_id=project_id,
+                                 bucket_name=bucket_name,
+                                 prefixes=prefixes,
+                                 time_threshold=DEFAULT_PUBSUB_TOPIC_THRESHOLD)
 
     # Refresh resources
     cleaner.refresh()
 
     # Delete stale resources
     cleaner.delete_stale(dry_run=False)
+
 
 def clean_pubsub_subscriptions():
     """ Clean up stale PubSub subscriptions in the specified GCP project.
@@ -420,14 +471,20 @@ def clean_pubsub_subscriptions():
     prefixes = []
 
     # Create a PubSubSubscriptionCleaner instance
-    cleaner = PubSubSubscriptionCleaner(project_id=project_id, bucket_name=bucket_name,
-                                        prefixes=prefixes, time_threshold=DEFAULT_PUBSUB_SUBSCRIPTION_THRESHOLD)
+    cleaner = PubSubSubscriptionCleaner(
+        project_id=project_id,
+        bucket_name=bucket_name,
+        prefixes=prefixes,
+        time_threshold=DEFAULT_PUBSUB_SUBSCRIPTION_THRESHOLD)
 
     # Refresh resources
     cleaner.refresh()
 
     # Delete stale resources
-    cleaner.delete_stale(dry_run=True) # Keep dry_run=True to avoid accidental deletions during testing
+    cleaner.delete_stale(
+        dry_run=True
+    )  # Keep dry_run=True to avoid accidental deletions during testing
+
 
 if __name__ == "__main__":
     # Clean up stale PubSub topics

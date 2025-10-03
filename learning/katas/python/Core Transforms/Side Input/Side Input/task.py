@@ -31,6 +31,7 @@ import apache_beam as beam
 
 
 class Person:
+
     def __init__(self, name, city, country=''):
         self.name = name
         self.city = city
@@ -41,25 +42,26 @@ class Person:
 
 
 class EnrichCountryDoFn(beam.DoFn):
+
     def process(self, element, cities_to_countries):
-      yield Person(element.name, element.city, cities_to_countries[element.city])
+        yield Person(element.name, element.city,
+                     cities_to_countries[element.city])
 
 
 with beam.Pipeline() as p:
-  cities_to_countries = p | "Side input" >> beam.Create([('Beijing', 'China'),
-                                                         ('London', 'United Kingdom'),
-                                                         ('San Francisco', 'United States'),
-                                                         ('Singapore', 'Singapore'),
-                                                         ('Sydney', 'Australia')])
+    cities_to_countries = p | "Side input" >> beam.Create(
+        [('Beijing', 'China'), ('London', 'United Kingdom'),
+         ('San Francisco', 'United States'), ('Singapore', 'Singapore'),
+         ('Sydney', 'Australia')])
 
-  persons = [
-      Person('Henry', 'Singapore'),
-      Person('Jane', 'San Francisco'),
-      Person('Lee', 'Beijing'),
-      Person('John', 'Sydney'),
-      Person('Alfred', 'London')
-  ]
+    persons = [
+        Person('Henry', 'Singapore'),
+        Person('Jane', 'San Francisco'),
+        Person('Lee', 'Beijing'),
+        Person('John', 'Sydney'),
+        Person('Alfred', 'London')
+    ]
 
-  (p | beam.Create(persons)
+    (p | beam.Create(persons)
      | beam.ParDo(EnrichCountryDoFn(), beam.pvalue.AsDict(cities_to_countries))
-   | beam.LogElements())
+     | beam.LogElements())

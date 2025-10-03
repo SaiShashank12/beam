@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Parses and extracts data from JUnitXML format files.
 
 Example usage, comparing nosetests and pytest test collection:
@@ -32,39 +31,39 @@ import xml.etree.ElementTree as et
 
 
 def print_testsuite(testsuite):
-  assert testsuite.tag == 'testsuite'
-  for testcase in testsuite:
-    assert testcase.tag == 'testcase'
-    attrib = testcase.attrib
-    status = ''
-    for child in testcase:
-      if child.tag == 'skipped':
-        assert status == ''
-        status = 'S'
-      elif child.tag == 'failure':
-        assert status == ''
-        status = 'F'
-      elif child.tag in ['system-err', 'system-out']:
-        pass
-      else:
-        raise NotImplementedError('tag not supported: %s' % child.tag)
-    print('%s.%s %s' % (attrib['classname'], attrib['name'], status))
+    assert testsuite.tag == 'testsuite'
+    for testcase in testsuite:
+        assert testcase.tag == 'testcase'
+        attrib = testcase.attrib
+        status = ''
+        for child in testcase:
+            if child.tag == 'skipped':
+                assert status == ''
+                status = 'S'
+            elif child.tag == 'failure':
+                assert status == ''
+                status = 'F'
+            elif child.tag in ['system-err', 'system-out']:
+                pass
+            else:
+                raise NotImplementedError('tag not supported: %s' % child.tag)
+        print('%s.%s %s' % (attrib['classname'], attrib['name'], status))
 
 
 def process_xml(filename):
-  tree = et.parse(filename)
-  root = tree.getroot()
-  if root.tag == 'testsuites':
-    for testsuite in root:
-      print_testsuite(testsuite)
-  else:
-    print_testsuite(root)
+    tree = et.parse(filename)
+    root = tree.getroot()
+    if root.tag == 'testsuites':
+        for testsuite in root:
+            print_testsuite(testsuite)
+    else:
+        print_testsuite(root)
 
 
 def main():
-  for filename in sys.argv[1:]:
-    process_xml(filename)
+    for filename in sys.argv[1:]:
+        process_xml(filename)
 
 
 if __name__ == '__main__':
-  main()
+    main()

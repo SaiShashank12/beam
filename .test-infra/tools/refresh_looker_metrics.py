@@ -28,11 +28,11 @@ TARGET_BUCKET = os.getenv("GCS_BUCKET")
 
 # List of Pairs (Target folder name, Look IDs to download)
 LOOKS_TO_DOWNLOAD = [
-    ("30", ["18", "50", "92", "49", "91"]),    # BigQueryIO_Read
-    ("31", ["19", "52", "88", "51", "87"]),    # BigQueryIO_Write
+    ("30", ["18", "50", "92", "49", "91"]),  # BigQueryIO_Read
+    ("31", ["19", "52", "88", "51", "87"]),  # BigQueryIO_Write
     ("32", ["20", "60", "104", "59", "103"]),  # BigTableIO_Read
     ("33", ["21", "70", "116", "69", "115"]),  # BigTableIO_Write
-    ("34", ["22", "56", "96", "55", "95"]),    # TextIO_Read
+    ("34", ["22", "56", "96", "55", "95"]),  # TextIO_Read
     ("35", ["23", "64", "110", "63", "109"]),  # TextIO_Write
     ("75", ["258", "259", "260", "261", "262"]),  # TensorFlow MNIST
     ("76", ["233", "234", "235", "236", "237"]),  # PyTorch BERT base uncased
@@ -40,8 +40,10 @@ LOOKS_TO_DOWNLOAD = [
     ("78", ["243", "244", "245", "246", "247"]),  # PyTorch Resnet 101
     ("79", ["248", "249", "250", "251", "252"]),  # PyTorch Resnet 152
     ("80", ["253", "254", "255", "256", "257"]),  # PyTorch Resnet 152 Tesla T4
-    ("82", ["263", "264", "265", "266", "267"]),  # PyTorch Sentiment Streaming DistilBERT base uncased
-    ("85", ["268", "269", "270", "271", "272"]),  # PyTorch Sentiment Batch DistilBERT base uncased
+    ("82", ["263", "264", "265", "266",
+            "267"]),  # PyTorch Sentiment Streaming DistilBERT base uncased
+    ("85", ["268", "269", "270", "271",
+            "272"]),  # PyTorch Sentiment Batch DistilBERT base uncased
     ("86", ["284", "285", "286", "287", "288"]),  # VLLM Batch Gemma
 ]
 
@@ -56,12 +58,15 @@ def get_look(id: str) -> models.Look:
 
 def download_look(look: models.Look):
     """Download specified look as png/jpg"""
-    task = sdk.create_look_render_task(look.id, "png", 810, 526,)
+    task = sdk.create_look_render_task(
+        look.id,
+        "png",
+        810,
+        526,
+    )
 
     if not (task and task.id):
-        raise Exception(
-            f"Could not create a render task for '{look.title}'"
-        )
+        raise Exception(f"Could not create a render task for '{look.title}'")
 
     # poll the render task until it completes
     elapsed = 0.0
@@ -78,10 +83,13 @@ def download_look(look: models.Look):
         time.sleep(delay)
         elapsed += delay
         retries += 1
-        print(f"Retry {retries}/{max_retries}: Render task still in progress...")
+        print(
+            f"Retry {retries}/{max_retries}: Render task still in progress...")
 
     if retries >= max_retries:
-        raise TimeoutError(f"Render task did not complete within {elapsed} seconds (max retries: {max_retries})")
+        raise TimeoutError(
+            f"Render task did not complete within {elapsed} seconds (max retries: {max_retries})"
+        )
 
     print(f"Render task completed in {elapsed} seconds")
 
@@ -112,7 +120,9 @@ def main():
                     look = get_look(look_id)
                     content = download_look(look)
                     if content:
-                        upload_to_gcs(TARGET_BUCKET, f"{folder}/{look.public_slug}.png", content)
+                        upload_to_gcs(TARGET_BUCKET,
+                                      f"{folder}/{look.public_slug}.png",
+                                      content)
                     else:
                         print(f"No content for look {look_id}")
                         failed_looks.append(look_id)
@@ -121,7 +131,8 @@ def main():
                 failed_looks.append(look_id)
 
     if failed_looks:
-        raise RuntimeError(f"Job failed due to errors in looks: {failed_looks}")
+        raise RuntimeError(
+            f"Job failed due to errors in looks: {failed_looks}")
 
 
 if __name__ == "__main__":

@@ -25,13 +25,14 @@
 #   tags:
 #     - hellobeam
 
-
 import apache_beam as beam
 from apache_beam.io.kafka import ReadFromKafka, WriteToKafka
+
 
 def process_data(element):
     # Do some processing on the data
     return element
+
 
 options = beam.options.pipeline_options.PipelineOptions()
 p = beam.Pipeline(options=options)
@@ -41,7 +42,6 @@ output_topic = 'output-topic'
 bootstrap_servers = {"bootstrap.servers": "kafka_server:9092"}
 
 input = p | beam.Create([{"key": "foo", "value": "bar"}])
-
 """
 This pipeline is an example of how you can use Apache Beam's KafkaIO (in Python SDK) to write data to a Kafka 
 topic.Make sure your Kafka server is accessible and running, and the topic exists. 

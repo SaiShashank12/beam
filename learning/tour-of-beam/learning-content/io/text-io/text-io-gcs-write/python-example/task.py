@@ -25,11 +25,12 @@
 #   tags:
 #     - hellobeam
 
-
 import apache_beam as beam
+
 
 def print_lines(line):
     print(line)
+
 
 p = beam.Pipeline()
 

@@ -25,13 +25,14 @@
 #   tags:
 #     - hellobeam
 
-
 import apache_beam as beam
 from apache_beam.io.kafka import ReadFromKafka, WriteToKafka
+
 
 def process_data(element):
     # Do some processing on the data
     return element
+
 
 options = beam.options.pipeline_options.PipelineOptions()
 p = beam.Pipeline(options=options)
@@ -48,8 +49,6 @@ bootstrap_servers = {"bootstrap.servers": "kafka_server:9092"}
 
 # Process the data: The data read from Kafka is processed using the beam.Map(process_data) method. In this case,
 # the data is simply passed to the process_data function defined earlier.
-
-
 
 # (p | "Read from Kafka" >> ReadFromKafka(
 #       topics=[input_topic],

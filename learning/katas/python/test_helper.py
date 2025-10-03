@@ -26,7 +26,11 @@ def get_file_text(path):
     return text
 
 
-def get_file_output(path=sys.argv[-1], arg_string="", encoding="utf-8", ):
+def get_file_output(
+    path=sys.argv[-1],
+    arg_string="",
+    encoding="utf-8",
+):
     """
     Returns answer file output.
 
@@ -35,13 +39,17 @@ def get_file_output(path=sys.argv[-1], arg_string="", encoding="utf-8", ):
     :param encoding: to decode output in python3
     :return: list of strings
     """
-    proc = subprocess.Popen([sys.executable, path], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    proc = subprocess.Popen([sys.executable, path],
+                            stdin=subprocess.PIPE,
+                            stdout=subprocess.PIPE)
     if arg_string:
         for arg in arg_string.split("\n"):
             proc.stdin.write(bytearray(str(arg) + "\n", encoding))
             proc.stdin.flush()
 
-    return list(map(lambda x: str(x.decode(encoding)), proc.communicate()[0].splitlines()))
+    return list(
+        map(lambda x: str(x.decode(encoding)),
+            proc.communicate()[0].splitlines()))
 
 
 def test_is_not_empty() -> bool:

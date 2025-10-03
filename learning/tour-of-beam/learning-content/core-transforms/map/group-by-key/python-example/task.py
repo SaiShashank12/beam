@@ -27,17 +27,20 @@
 
 import apache_beam as beam
 
+
 # Output PCollection
 class Output(beam.PTransform):
+
     class _OutputFn(beam.DoFn):
+
         def __init__(self, prefix=''):
             super().__init__()
             self.prefix = prefix
 
         def process(self, element):
-            print(self.prefix+str(element))
+            print(self.prefix + str(element))
 
-    def __init__(self, label=None,prefix=''):
+    def __init__(self, label=None, prefix=''):
         super().__init__(label)
         self.prefix = prefix
 
@@ -46,8 +49,8 @@ class Output(beam.PTransform):
 
 
 with beam.Pipeline() as p:
-  (p | beam.Create(['apple', 'ball', 'car', 'bear', 'cheetah', 'ant'])
-    # Returns a map which key will be the first letter, and the values are a list of words
+    (p | beam.Create(['apple', 'ball', 'car', 'bear', 'cheetah', 'ant'])
+     # Returns a map which key will be the first letter, and the values are a list of words
      | beam.Map(lambda word: (word[0], word))
      | beam.GroupByKey()
      | Output())

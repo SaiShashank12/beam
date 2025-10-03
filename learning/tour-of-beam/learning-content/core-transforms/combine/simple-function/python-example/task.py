@@ -27,17 +27,20 @@
 
 import apache_beam as beam
 
+
 # Output PCollection
 class Output(beam.PTransform):
+
     class _OutputFn(beam.DoFn):
+
         def __init__(self, prefix=''):
             super().__init__()
             self.prefix = prefix
 
         def process(self, element):
-            print(self.prefix+str(element))
+            print(self.prefix + str(element))
 
-    def __init__(self, label=None,prefix=''):
+    def __init__(self, label=None, prefix=''):
         super().__init__(label)
         self.prefix = prefix
 
@@ -55,7 +58,4 @@ def sum(numbers):
 
 
 with beam.Pipeline() as p:
-  (p | beam.Create([1, 2, 3, 4, 5])
-     | beam.CombineGlobally(sum)
-     | Output())
-
+    (p | beam.Create([1, 2, 3, 4, 5]) | beam.CombineGlobally(sum) | Output())

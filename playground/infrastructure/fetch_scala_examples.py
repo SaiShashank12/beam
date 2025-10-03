@@ -42,7 +42,8 @@ class ScioExampleTag:
 
 SCIO_EXAMPLES: List[ScioExampleTag] = [
     ScioExampleTag(
-        filepath="scio-examples/src/main/scala/com/spotify/scio/examples/DebuggingWordCount.scala",
+        filepath=
+        "scio-examples/src/main/scala/com/spotify/scio/examples/DebuggingWordCount.scala",
         name="DebuggingWordCount",
         description="Word Count Example with Assertions.",
         multifile=False,
@@ -51,82 +52,94 @@ SCIO_EXAMPLES: List[ScioExampleTag] = [
         context_line=1,
         categories=["Debugging", "Filtering", "Options", "Quickstart"],
         complexity=ComplexityEnum.MEDIUM,
-        tags=["Example"]
-        ),
+        tags=["Example"]),
     ScioExampleTag(
-        filepath="scio-examples/src/main/scala/com/spotify/scio/examples/extra/MetricsExample.scala",
+        filepath=
+        "scio-examples/src/main/scala/com/spotify/scio/examples/extra/MetricsExample.scala",
         name="MetricsExample",
         description="Metrics example.",
         multifile=False,
         pipeline_options="",
         default_example=False,
         context_line=1,
-        categories=["Combiners", "Filtering", "IO", "Core Transforms", "Quickstart"],
+        categories=[
+            "Combiners", "Filtering", "IO", "Core Transforms", "Quickstart"
+        ],
         complexity=ComplexityEnum.MEDIUM,
-        tags=["Example"]
-    ),
+        tags=["Example"]),
     ScioExampleTag(
-        filepath="scio-examples/src/main/scala/com/spotify/scio/examples/MinimalWordCount.scala",
+        filepath=
+        "scio-examples/src/main/scala/com/spotify/scio/examples/MinimalWordCount.scala",
         name="MinimalWordCount",
         description="An example that counts words in Shakespeare's works.",
         multifile=False,
         pipeline_options="--output output.txt",
         default_example=True,
         context_line=1,
-        categories=["Combiners", "Filtering", "IO", "Core Transforms", "Quickstart"],
+        categories=[
+            "Combiners", "Filtering", "IO", "Core Transforms", "Quickstart"
+        ],
         complexity=ComplexityEnum.BASIC,
-        tags=["Example"]
-    ),
+        tags=["Example"]),
     ScioExampleTag(
-        filepath="scio-examples/src/main/scala/com/spotify/scio/examples/extra/SafeFlatMapExample.scala",
+        filepath=
+        "scio-examples/src/main/scala/com/spotify/scio/examples/extra/SafeFlatMapExample.scala",
         name="SafeFlatMapExample",
         description="SafeFlatMap usage",
         multifile=False,
         pipeline_options="--output output.txt",
         default_example=False,
         context_line=1,
-        categories=["Combiners", "Filtering", "IO", "Core Transforms", "Quickstart"],
+        categories=[
+            "Combiners", "Filtering", "IO", "Core Transforms", "Quickstart"
+        ],
         complexity=ComplexityEnum.MEDIUM,
-        tags=["Example"]
-    ),
+        tags=["Example"]),
     ScioExampleTag(
-        filepath="scio-examples/src/main/scala/com/spotify/scio/examples/extra/StatefulExample.scala",
+        filepath=
+        "scio-examples/src/main/scala/com/spotify/scio/examples/extra/StatefulExample.scala",
         name="StatefulExample",
         description="Stateful Processing.",
         multifile=False,
         pipeline_options="",
         default_example=False,
         context_line=1,
-        categories=["Combiners", "Filtering", "IO", "Core Transforms", "Quickstart"],
+        categories=[
+            "Combiners", "Filtering", "IO", "Core Transforms", "Quickstart"
+        ],
         complexity=ComplexityEnum.MEDIUM,
-        tags=["Example"]
-    ),
+        tags=["Example"]),
     ScioExampleTag(
-        filepath="scio-examples/src/main/scala/com/spotify/scio/examples/complete/TfIdf.scala",
+        filepath=
+        "scio-examples/src/main/scala/com/spotify/scio/examples/complete/TfIdf.scala",
         name="TfIdf",
         description="Compute TF-IDF from a Text Corpus.",
         multifile=False,
         pipeline_options="--output output.txt",
         default_example=False,
         context_line=1,
-        categories=["Combiners", "Filtering", "IO", "Core Transforms", "Quickstart"],
+        categories=[
+            "Combiners", "Filtering", "IO", "Core Transforms", "Quickstart"
+        ],
         complexity=ComplexityEnum.MEDIUM,
-        tags=["Example"]
-    ),
+        tags=["Example"]),
     ScioExampleTag(
-        filepath="scio-examples/src/main/scala/com/spotify/scio/examples/extra/TsvExample.scala",
+        filepath=
+        "scio-examples/src/main/scala/com/spotify/scio/examples/extra/TsvExample.scala",
         name="TsvExampleWrite",
         description="Reading and writing tsv data.",
         multifile=False,
         pipeline_options="--output output.txt",
         default_example=False,
         context_line=1,
-        categories=["Combiners", "Filtering", "IO", "Core Transforms", "Quickstart"],
+        categories=[
+            "Combiners", "Filtering", "IO", "Core Transforms", "Quickstart"
+        ],
         complexity=ComplexityEnum.MEDIUM,
-        tags=["Example"]
-    ),
+        tags=["Example"]),
     ScioExampleTag(
-        filepath="scio-examples/src/main/scala/com/spotify/scio/examples/WordCount.scala",
+        filepath=
+        "scio-examples/src/main/scala/com/spotify/scio/examples/WordCount.scala",
         name="WordCount",
         description="An example that counts words in Shakespeare's works.",
         multifile=False,
@@ -135,42 +148,49 @@ SCIO_EXAMPLES: List[ScioExampleTag] = [
         context_line=1,
         categories=["Combiners", "Options", "Quickstart"],
         complexity=ComplexityEnum.MEDIUM,
-        tags=["Example"]
-    ),
+        tags=["Example"]),
     ScioExampleTag(
-        filepath="scio-examples/src/main/scala/com/spotify/scio/examples/extra/WordCountScioIO.scala",
+        filepath=
+        "scio-examples/src/main/scala/com/spotify/scio/examples/extra/WordCountScioIO.scala",
         name="WordCountScioIO",
         description="Word Count Example with Metrics and ScioIO read/write.",
         multifile=False,
         pipeline_options="--output output.txt",
         default_example=False,
         context_line=1,
-        categories=["Combiners", "Filtering", "IO", "Core Transforms", "Quickstart"],
+        categories=[
+            "Combiners", "Filtering", "IO", "Core Transforms", "Quickstart"
+        ],
         complexity=ComplexityEnum.MEDIUM,
-        tags=["Example"]
-    ),
+        tags=["Example"]),
     ScioExampleTag(
-        filepath="scio-examples/src/main/scala/com/spotify/scio/examples/extra/WriteDynamicExample.scala",
+        filepath=
+        "scio-examples/src/main/scala/com/spotify/scio/examples/extra/WriteDynamicExample.scala",
         name="WriteDynamicExample",
         description="Demonstrates saveAsDynamic* methods.",
         multifile=False,
         pipeline_options="--output output.txt",
         default_example=False,
         context_line=1,
-        categories=["Combiners", "Filtering", "IO", "Core Transforms", "Quickstart"],
+        categories=[
+            "Combiners", "Filtering", "IO", "Core Transforms", "Quickstart"
+        ],
         complexity=ComplexityEnum.MEDIUM,
-        tags=["Example"]
-    ),
+        tags=["Example"]),
 ]
 
 
 def fetch_scala_examples() -> Tuple[ScioExampleTag, str]:
     """Fetch all Scala examples from the Scio repository."""
-    urls = [(example, SCIO_REPOSITORY + "/" + SCIO_BRANCH + "/" + example.filepath) for example in SCIO_EXAMPLES]
+    urls = [(example,
+             SCIO_REPOSITORY + "/" + SCIO_BRANCH + "/" + example.filepath)
+            for example in SCIO_EXAMPLES]
     for example, url in urls:
         result = requests.get(url)
         if result.status_code != 200:
-            print(f"Failed to fetch {url} with status code {result.status_code}, skipping")
+            print(
+                f"Failed to fetch {url} with status code {result.status_code}, skipping"
+            )
             continue
         content = result.text
         yield example, content
@@ -214,7 +234,9 @@ def insert_tag_into_source(tag_yaml: str, source: str) -> str:
             break
 
     tag_lines_number = tag_yaml.count("\n")
-    tag_yaml = re.sub(r"context_line: \d+", f"context_line: {object_line + tag_lines_number + 3}", tag_yaml)
+    tag_yaml = re.sub(r"context_line: \d+",
+                      f"context_line: {object_line + tag_lines_number + 3}",
+                      tag_yaml)
     tag_yaml = "// " + tag_yaml.replace("\n", "\n// ")
     tag_yaml = "\n" + tag_yaml
 
@@ -225,7 +247,10 @@ def insert_tag_into_source(tag_yaml: str, source: str) -> str:
 
 
 argparser = argparse.ArgumentParser()
-argparser.add_argument("--output-dir", dest="output_dir", help="Output directory", required=True)
+argparser.add_argument("--output-dir",
+                       dest="output_dir",
+                       help="Output directory",
+                       required=True)
 
 if __name__ == "__main__":
     args = argparser.parse_args()

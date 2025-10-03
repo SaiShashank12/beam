@@ -27,7 +27,6 @@
 #   tags:
 #     - hellobeam
 
-
 import apache_beam as beam
 
 p = beam.Pipeline()

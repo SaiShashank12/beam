@@ -13,7 +13,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """This module implements enrichment classes to implement semantic search on opensearch Vector DB.
 
 
@@ -32,7 +31,6 @@ No backward compatibility guarantees. Everything in this module is experimental.
 """
 
 import logging
-
 
 from opensearchpy import OpenSearch
 from typing import Optional
@@ -57,16 +55,17 @@ class OpenSearchEnrichmentHandler(EnrichmentSourceHandler[beam.Row, beam.Row]):
     """A handler for :class:`apache_beam.transforms.enrichment.Enrichment`
     transform to interact with opensearch vector DB.
     """
+
     def __init__(
-            self,
-            opensearch_host: str,
-            opensearch_port: int,
-            username: Optional[str],
-            password: Optional[str],
-            index_name: str = "embeddings-index",
-            vector_field: str = "text_vector",
-            k: int = 1,
-            size: int = 5,
+        self,
+        opensearch_host: str,
+        opensearch_port: int,
+        username: Optional[str],
+        password: Optional[str],
+        index_name: str = "embeddings-index",
+        vector_field: str = "text_vector",
+        k: int = 1,
+        size: int = 5,
     ):
         """Args:
           opensearch_host (str): opensearch Host to connect to opensearch DB
@@ -86,7 +85,9 @@ class OpenSearchEnrichmentHandler(EnrichmentSourceHandler[beam.Row, beam.Row]):
         self.client = None
 
         if not self.username or not self.password:
-            raise ValueError("Username and password are needed for connecting to Opensearch cluster.")
+            raise ValueError(
+                "Username and password are needed for connecting to Opensearch cluster."
+            )
 
     def __enter__(self):
         """connect to the opensearch DB using opensearch client.
@@ -94,9 +95,10 @@ class OpenSearchEnrichmentHandler(EnrichmentSourceHandler[beam.Row, beam.Row]):
 
         if self.client is None:
             http_auth = [self.username, self.password]
-            self.client = OpenSearch(hosts=[f'{self.opensearch_host}:{self.opensearch_port}'],
-                                     http_auth=http_auth,
-                                     verify_certs=False)
+            self.client = OpenSearch(
+                hosts=[f'{self.opensearch_host}:{self.opensearch_port}'],
+                http_auth=http_auth,
+                verify_certs=False)
 
     def __call__(self, request: beam.Row, *args, **kwargs):
         """
@@ -125,10 +127,7 @@ class OpenSearchEnrichmentHandler(EnrichmentSourceHandler[beam.Row, beam.Row]):
         }
 
         # perform vector search
-        results = self.client.search(
-            body=query,
-            index=self.index_name
-        )
+        results = self.client.search(body=query, index=self.index_name)
         logger.info("Enrichment_results", results)
 
         return beam.Row(text=embedded_query), beam.Row(docs=results)

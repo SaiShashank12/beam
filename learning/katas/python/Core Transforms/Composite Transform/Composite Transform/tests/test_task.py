@@ -23,6 +23,7 @@ from test_helper import test_is_not_empty, get_file_output
 
 
 class TestCase(unittest.TestCase):
+
     def test_not_empty(self):
         self.assertTrue(test_is_not_empty(), 'The output is empty')
 
@@ -32,4 +33,7 @@ class TestCase(unittest.TestCase):
         answers = ['10', '20', '30', '40', '50', '60', '70', '80', '90', '100']
 
         for ans in answers:
-            self.assertIn(ans, output, "Incorrect output. Extract the numbers and multiply each by 10.")
+            self.assertIn(
+                ans, output,
+                "Incorrect output. Extract the numbers and multiply each by 10."
+            )

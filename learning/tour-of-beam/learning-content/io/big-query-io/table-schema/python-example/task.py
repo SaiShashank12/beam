@@ -30,25 +30,30 @@ from apache_beam.io.gcp.internal.clients import bigquery
 
 p = beam.Pipeline()
 
-table_spec = bigquery.TableReference(
-                 projectId='project-id',
-                 datasetId='dataset',
-                 tableId='table')
+table_spec = bigquery.TableReference(projectId='project-id',
+                                     datasetId='dataset',
+                                     tableId='table')
 
 table_schema = {
     'fields': [{
-        'name': 'source', 'type': 'STRING', 'mode': 'NULLABLE'
+        'name': 'source',
+        'type': 'STRING',
+        'mode': 'NULLABLE'
     }, {
-        'name': 'quote', 'type': 'STRING', 'mode': 'REQUIRED'
+        'name': 'quote',
+        'type': 'STRING',
+        'mode': 'REQUIRED'
     }]
 }
 
 input = p | beam.Create([
     {
-        'source': 'Mahatma Gandhi', 'quote': 'My life is my message.'
+        'source': 'Mahatma Gandhi',
+        'quote': 'My life is my message.'
     },
     {
-        'source': 'Yoda', 'quote': "Do, or do not. There is no 'try'."
+        'source': 'Yoda',
+        'quote': "Do, or do not. There is no 'try'."
     },
 ])
 

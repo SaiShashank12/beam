@@ -15,33 +15,40 @@
 
 import numpy
 
+
 class Class2:
-  pass
+    pass
+
 
 class Class1(object):
-  visible_field_2: numpy.int8
-  visible_field_1 = []
+    visible_field_2: numpy.int8
+    visible_field_1 = []
 
-  _hidden_field_1 = 1
+    _hidden_field_1 = 1
 
-  def __init__(self):
-    self.hidden_field_2 = 2
+    def __init__(self):
+        self.hidden_field_2 = 2
 
-  def _hidden_method_2(): pass
+    def _hidden_method_2():
+        pass
 
-  def visible_method_2():
-    self.hidden_field_3 = 3
+    def visible_method_2():
+        self.hidden_field_3 = 3
 
-  def visible_method_1():
-    self.hidden_field_3 = 3
+    def visible_method_1():
+        self.hidden_field_3 = 3
+
 
 def hidden_global_function():
-  return 1
+    return 1
+
 
 hidden_global_variable = 1
 
+
 class HiddenTest:
-  pass
+    pass
+
 
 class HiddenTestCase:
-  pass
+    pass

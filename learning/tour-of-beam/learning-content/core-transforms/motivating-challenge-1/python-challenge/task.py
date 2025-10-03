@@ -27,36 +27,41 @@
 
 import apache_beam as beam
 
+
 # Output PCollection
 class Output(beam.PTransform):
+
     class _OutputFn(beam.DoFn):
+
         def __init__(self, prefix=''):
             super().__init__()
             self.prefix = prefix
 
         def process(self, element):
-            print(self.prefix+str(element))
+            print(self.prefix + str(element))
 
-    def __init__(self, label=None,prefix=''):
+    def __init__(self, label=None, prefix=''):
         super().__init__(label)
         self.prefix = prefix
 
     def expand(self, input):
         input | beam.ParDo(self._OutputFn(self.prefix))
 
+
 def partition_fn(word, num_partitions):
     return 0
 
+
 with beam.Pipeline() as p:
-  parts = p | 'Log lines' >> beam.io.ReadFromText('gs://apache-beam-samples/shakespeare/kinglear.txt') \
-            | beam.combiners.Sample.FixedSizeGlobally(100) \
-            | beam.FlatMap(lambda line: line) \
-            | beam.FlatMap(lambda sentence: sentence.split())
+    parts = p | 'Log lines' >> beam.io.ReadFromText('gs://apache-beam-samples/shakespeare/kinglear.txt') \
+              | beam.combiners.Sample.FixedSizeGlobally(100) \
+              | beam.FlatMap(lambda line: line) \
+              | beam.FlatMap(lambda sentence: sentence.split())
 
-  allLetterUpperCase = parts
-  firstLetterUpperCase = parts
-  allLetterLowerCase = parts
+    allLetterUpperCase = parts
+    firstLetterUpperCase = parts
+    allLetterLowerCase = parts
 
-  flattenPCollection = (# Flatten
-                        # GroupByKey
-                        Output())
+    flattenPCollection = (  # Flatten
+        # GroupByKey
+        Output())

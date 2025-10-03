@@ -49,6 +49,6 @@ class AverageFn(beam.CombineFn):
 
 with beam.Pipeline() as p:
 
-  (p | beam.Create([10, 20, 50, 70, 90])
+    (p | beam.Create([10, 20, 50, 70, 90])
      | beam.CombineGlobally(AverageFn())
      | beam.LogElements())

@@ -12,7 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """
 Configuration for CI/CD steps
 """
@@ -36,23 +35,22 @@ class Config:
     """
     SERVER_ADDRESS = os.getenv(SERVER_ADDRESS_ENV_VAR_KEY, "localhost:8080")
     EXTENSION_TO_SDK = {
-        "java": SDK_JAVA, "go": SDK_GO, "py": SDK_PYTHON, "scala": SDK_SCIO
+        "java": SDK_JAVA,
+        "go": SDK_GO,
+        "py": SDK_PYTHON,
+        "scala": SDK_SCIO
     }
-    SUPPORTED_SDK = (
-        Sdk.Name(SDK_JAVA),
-        Sdk.Name(SDK_GO),
-        Sdk.Name(SDK_PYTHON),
-        Sdk.Name(SDK_SCIO))
+    SUPPORTED_SDK = (Sdk.Name(SDK_JAVA), Sdk.Name(SDK_GO),
+                     Sdk.Name(SDK_PYTHON), Sdk.Name(SDK_SCIO))
     SDK_TO_EXTENSION = {
-        SDK_JAVA: "java", SDK_GO: "go", SDK_PYTHON: "py", SDK_SCIO: "scala"
+        SDK_JAVA: "java",
+        SDK_GO: "go",
+        SDK_PYTHON: "py",
+        SDK_SCIO: "scala"
     }
     ERROR_STATUSES = [
-        STATUS_VALIDATION_ERROR,
-        STATUS_ERROR,
-        STATUS_PREPARATION_ERROR,
-        STATUS_COMPILE_ERROR,
-        STATUS_RUN_TIMEOUT,
-        STATUS_RUN_ERROR
+        STATUS_VALIDATION_ERROR, STATUS_ERROR, STATUS_PREPARATION_ERROR,
+        STATUS_COMPILE_ERROR, STATUS_RUN_TIMEOUT, STATUS_RUN_ERROR
     ]
     BEAM_PLAYGROUND_TITLE = "beam-playground:\n"
     BEAM_PLAYGROUND = "beam-playground"
@@ -61,7 +59,8 @@ class Config:
     CD_STEP_NAME = "CD"
     CI_CD_LITERAL = Literal["CI", "CD"]
     URL_VCS_PREFIX = "https://github.com/apache/beam/blob/master"
-    SDK_CONFIG = os.getenv(SDK_CONFIG_ENV_VAR_KEY, "../../playground/sdks.yaml")
+    SDK_CONFIG = os.getenv(SDK_CONFIG_ENV_VAR_KEY,
+                           "../../playground/sdks.yaml")
     DEFAULT_NAMESPACE = "Playground"
 
 
@@ -114,10 +113,10 @@ class DatastoreProps:
 class RepoProps:
     REPO_DATASETS_PATH = "../backend/datasets"
 
+
 class Origin(str, Enum):
     PG_EXAMPLES = 'PG_EXAMPLES'
     PG_USER = 'PG_USER'
     PG_BEAMDOC = 'PG_BEAMDOC'
     TB_EXAMPLES = 'TB_EXAMPLES'
     TB_USER = 'TB_USER'
-

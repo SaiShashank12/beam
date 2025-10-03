@@ -12,7 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """
 Module contains the client to communicate with Google Cloud Datastore
 """
@@ -44,19 +43,18 @@ class DatastoreClient:
 
     _datastore_client: datastore.Client
 
-    def __init__(self, project:str, namespace: str):
+    def __init__(self, project: str, namespace: str):
         self._check_envs()
-        self._datastore_client = datastore.Client(
-            namespace=namespace, project=project
-        )
+        self._datastore_client = datastore.Client(namespace=namespace,
+                                                  project=project)
 
     def _check_envs(self):
         if Config.SDK_CONFIG is None:
-            raise KeyError("SDK_CONFIG environment variable should be specified in os")
+            raise KeyError(
+                "SDK_CONFIG environment variable should be specified in os")
 
-    def save_to_cloud_datastore(
-        self, examples_from_rep: List[Example], sdk: SdkEnum, origin: Origin
-    ):
+    def save_to_cloud_datastore(self, examples_from_rep: List[Example],
+                                sdk: SdkEnum, origin: Origin):
         """
         Save examples, output and meta to datastore
         Args:
@@ -77,43 +75,43 @@ class DatastoreClient:
         # loop through every example to save them to the Cloud Datastore
         for example in tqdm(examples_from_rep):
             with self._datastore_client.transaction():
-                sdk_key = self._get_key(
-                    DatastoreProps.SDK_KIND, api_pb2.Sdk.Name(example.sdk)
-                )
-                example_id = self._make_example_id(origin, sdk, example.tag.name)
+                sdk_key = self._get_key(DatastoreProps.SDK_KIND,
+                                        api_pb2.Sdk.Name(example.sdk))
+                example_id = self._make_example_id(origin, sdk,
+                                                   example.tag.name)
 
                 self._datastore_client.put(
-                    self._to_example_entity(
-                        example, example_id, sdk_key, actual_schema_version_key, origin
-                    )
-                )
+                    self._to_example_entity(example, example_id, sdk_key,
+                                            actual_schema_version_key, origin))
 
                 snippet = self._to_snippet_entity(
-                    example, example_id, sdk_key, now, actual_schema_version_key, origin,
+                    example,
+                    example_id,
+                    sdk_key,
+                    now,
+                    actual_schema_version_key,
+                    origin,
                 )
                 self._datastore_client.put(snippet)
 
                 if not example.tag.always_run:
                     self._datastore_client.put_multi(
-                        self._pc_object_entities(example, example_id)
-                    )
+                        self._pc_object_entities(example, example_id))
 
-                self._datastore_client.put(self._to_main_file_entity(example, example_id))
+                self._datastore_client.put(
+                    self._to_main_file_entity(example, example_id))
                 if example.tag.files:
-                    self._datastore_client.put_multi(
-                        [
-                            self._to_additional_file_entity(example_id, file, idx)
-                            for idx, file in enumerate(example.tag.files, start=1)
-                        ]
-                    )
+                    self._datastore_client.put_multi([
+                        self._to_additional_file_entity(example_id, file, idx)
+                        for idx, file in enumerate(example.tag.files, start=1)
+                    ])
 
                 if example.tag.datasets:
-                    self._datastore_client.put_multi(
-                        [
-                            self._to_dataset_entity(dataset_id, dataset.file_name)
-                            for dataset_id, dataset in example.tag.datasets.items()
-                        ]
-                    )
+                    self._datastore_client.put_multi([
+                        self._to_dataset_entity(dataset_id, dataset.file_name)
+                        for dataset_id, dataset in
+                        example.tag.datasets.items()
+                    ])
 
                 updated_example_ids.add(example_id)
 
@@ -126,24 +124,21 @@ class DatastoreClient:
         for ex_id in examples_ids_for_removing:
             with self._datastore_client.transaction():
                 self._datastore_client.delete(
-                    self._get_key(DatastoreProps.EXAMPLE_KIND, ex_id)
-                )
+                    self._get_key(DatastoreProps.EXAMPLE_KIND, ex_id))
                 self._datastore_client.delete(
-                    self._get_key(DatastoreProps.SNIPPET_KIND, ex_id)
-                )
+                    self._get_key(DatastoreProps.SNIPPET_KIND, ex_id))
                 self._datastore_client.delete(self._get_files_key(ex_id, 0))
             pc_objs_keys_for_removing = []
             for example_type in [
-                PrecompiledExample.GRAPH_EXTENSION.upper(),
-                PrecompiledExample.OUTPUT_EXTENSION.upper(),
-                PrecompiledExample.LOG_EXTENSION.upper(),
+                    PrecompiledExample.GRAPH_EXTENSION.upper(),
+                    PrecompiledExample.OUTPUT_EXTENSION.upper(),
+                    PrecompiledExample.LOG_EXTENSION.upper(),
             ]:
                 pc_objs_keys_for_removing.append(
                     self._get_key(
                         DatastoreProps.PRECOMPILED_OBJECT_KIND,
                         f"{ex_id}{config.DatastoreProps.KEY_NAME_DELIMITER}{example_type}",
-                    )
-                )
+                    ))
             self._datastore_client.delete_multi(pc_objs_keys_for_removing)
 
         logging.info("Finish of deleting extra playground examples ...")
@@ -155,9 +150,10 @@ class DatastoreClient:
         # save a schema version entity
         schema_entity = datastore.Entity(
             self._get_key(DatastoreProps.SCHEMA_KIND, "0.0.1"),
-            exclude_from_indexes=("descr",),
+            exclude_from_indexes=("descr", ),
         )
-        schema_entity.update({"descr": "Data initialization: a schema version, SDKs"})
+        schema_entity.update(
+            {"descr": "Data initialization: a schema version, SDKs"})
         self._datastore_client.put(schema_entity)
 
         # save a sdk catalog
@@ -169,7 +165,8 @@ class DatastoreClient:
         file_name = Path(Config.SDK_CONFIG).stem
         for key in sdk_objs[file_name]:
             default_example = sdk_objs[file_name][key]["default-example"]
-            sdk_entity = datastore.Entity(self._get_key(DatastoreProps.SDK_KIND, key))
+            sdk_entity = datastore.Entity(
+                self._get_key(DatastoreProps.SDK_KIND, key))
             sdk_entity.update({"defaultExample": default_example})
             sdk_entities.append(sdk_entity)
 
@@ -178,8 +175,7 @@ class DatastoreClient:
     def _get_actual_schema_version_key(self) -> datastore.Key:
         schema_names = []
         last_schema_version_query = self._datastore_client.query(
-            kind=DatastoreProps.SCHEMA_KIND
-        )
+            kind=DatastoreProps.SCHEMA_KIND)
         last_schema_version_query.keys_only()
         schema_iterator = last_schema_version_query.fetch()
         schemas = list(schema_iterator)
@@ -196,11 +192,10 @@ class DatastoreClient:
     def _get_all_examples(self, sdk: SdkEnum, origin: Origin) -> List[str]:
         examples_ids_before_updating = []
         all_examples_query = self._datastore_client.query(
-            kind=DatastoreProps.EXAMPLE_KIND
-        )
+            kind=DatastoreProps.EXAMPLE_KIND)
         all_examples_query.add_filter(
-            "sdk", "=", self._get_key(DatastoreProps.SDK_KIND, api_pb2.Sdk.Name(sdk))
-        )
+            "sdk", "=",
+            self._get_key(DatastoreProps.SDK_KIND, api_pb2.Sdk.Name(sdk)))
         all_examples_query.add_filter("origin", "=", origin)
         all_examples_query.keys_only()
         examples_iterator = all_examples_query.fetch()
@@ -224,28 +219,26 @@ class DatastoreClient:
         # ToB examples (and other related entities: snippets, files, pc_objects)
         # and Beam Documentation examples have origin prefix in a key
         if origin == Origin.TB_EXAMPLES or origin == Origin.PG_BEAMDOC:
-            return config.DatastoreProps.KEY_NAME_DELIMITER.join(
-                [
-                    origin,
-                    api_pb2.Sdk.Name(sdk),
-                    name,
-                ]
-            )
-        return config.DatastoreProps.KEY_NAME_DELIMITER.join(
-            [
+            return config.DatastoreProps.KEY_NAME_DELIMITER.join([
+                origin,
                 api_pb2.Sdk.Name(sdk),
                 name,
-            ]
-        )
+            ])
+        return config.DatastoreProps.KEY_NAME_DELIMITER.join([
+            api_pb2.Sdk.Name(sdk),
+            name,
+        ])
 
     def _get_files_key(self, example_id: str, idx: int):
-        name = config.DatastoreProps.KEY_NAME_DELIMITER.join([example_id, str(idx)])
+        name = config.DatastoreProps.KEY_NAME_DELIMITER.join(
+            [example_id, str(idx)])
         return self._get_key(DatastoreProps.FILES_KIND, name)
 
     def _get_pc_objects_key(self, example_id: str, pc_obj_type: str):
         return self._get_key(
             DatastoreProps.PRECOMPILED_OBJECT_KIND,
-            config.DatastoreProps.KEY_NAME_DELIMITER.join([example_id, pc_obj_type]),
+            config.DatastoreProps.KEY_NAME_DELIMITER.join(
+                [example_id, pc_obj_type]),
         )
 
     def _to_snippet_entity(
@@ -258,19 +251,25 @@ class DatastoreClient:
         origin: Origin,
     ) -> datastore.Entity:
         snippet_entity = datastore.Entity(self._get_snippet_key(example_id))
-        snippet_entity.update(
-            {
-                "sdk": sdk_key,
-                "pipeOpts": self._get_pipeline_options(example),
-                "created": now,
-                "origin": origin,
-                "numberOfFiles": 1 + len(example.tag.files),
-                "schVer": schema_key,
-                "complexity": f"COMPLEXITY_{example.tag.complexity}",
-            }
-        )
+        snippet_entity.update({
+            "sdk":
+            sdk_key,
+            "pipeOpts":
+            self._get_pipeline_options(example),
+            "created":
+            now,
+            "origin":
+            origin,
+            "numberOfFiles":
+            1 + len(example.tag.files),
+            "schVer":
+            schema_key,
+            "complexity":
+            f"COMPLEXITY_{example.tag.complexity}",
+        })
         if example.tag.datasets:
-            snippet_entity.update({"datasets": self._snippet_datasets(example)})
+            snippet_entity.update(
+                {"datasets": self._snippet_datasets(example)})
         return snippet_entity
 
     def _get_pipeline_options(self, example: Example):
@@ -288,90 +287,91 @@ class DatastoreClient:
         origin: Origin,
     ) -> datastore.Entity:
         example_entity = datastore.Entity(self._get_example_key(example_id))
-        example_entity.update(
-            {
-                "name": example.tag.name,
-                "sdk": sdk_key,
-                "descr": example.tag.description,
-                "tags": example.tag.tags,
-                "cats": example.tag.categories,
-                "path": example.url_vcs,  # keep for backward-compatibity, to be removed
-                "type": api_pb2.PrecompiledObjectType.Name(example.type),
-                "alwaysRun": example.tag.always_run,
-                "neverRun": example.tag.never_run,
-                "origin": origin,
-                "schVer": schema_key,
-                "urlVCS": example.url_vcs,
-                "urlNotebook": example.tag.url_notebook,
-            }
-        )
+        example_entity.update({
+            "name":
+            example.tag.name,
+            "sdk":
+            sdk_key,
+            "descr":
+            example.tag.description,
+            "tags":
+            example.tag.tags,
+            "cats":
+            example.tag.categories,
+            "path":
+            example.url_vcs,  # keep for backward-compatibity, to be removed
+            "type":
+            api_pb2.PrecompiledObjectType.Name(example.type),
+            "alwaysRun":
+            example.tag.always_run,
+            "neverRun":
+            example.tag.never_run,
+            "origin":
+            origin,
+            "schVer":
+            schema_key,
+            "urlVCS":
+            example.url_vcs,
+            "urlNotebook":
+            example.tag.url_notebook,
+        })
         return example_entity
 
-    def _pc_object_entities(
-        self, example: Example, example_id: str
-    ) -> List[datastore.Entity]:
+    def _pc_object_entities(self, example: Example,
+                            example_id: str) -> List[datastore.Entity]:
         entities = []
         entities.append(
             self._pc_obj_entity(
                 example_id,
                 example.graph,
                 PrecompiledExample.GRAPH_EXTENSION.upper(),
-            )
-        )
+            ))
         entities.append(
             self._pc_obj_entity(
                 example_id,
                 example.output,
                 PrecompiledExample.OUTPUT_EXTENSION.upper(),
-            )
-        )
+            ))
         entities.append(
-            self._pc_obj_entity(
-                example_id, example.logs, PrecompiledExample.LOG_EXTENSION.upper()
-            )
-        )
+            self._pc_obj_entity(example_id, example.logs,
+                                PrecompiledExample.LOG_EXTENSION.upper()))
         return entities
 
-    def _pc_obj_entity(
-        self, example_id: str, content: str, pc_obj_type: str
-    ) -> datastore.Entity:
+    def _pc_obj_entity(self, example_id: str, content: str,
+                       pc_obj_type: str) -> datastore.Entity:
         pc_obj_entity = datastore.Entity(
             self._get_pc_objects_key(example_id, pc_obj_type),
-            exclude_from_indexes=("content",),
+            exclude_from_indexes=("content", ),
         )
         pc_obj_entity.update({"content": content})
         return pc_obj_entity
 
     def _to_main_file_entity(self, example: Example, example_id: str):
-        file_entity = datastore.Entity(
-            self._get_files_key(example_id, 0), exclude_from_indexes=("content",)
-        )
-        file_entity.update(
-            {
-                "name": self._get_file_name_with_extension(
-                    example.tag.name, example.sdk
-                ),
-                "content": example.code,
-                "cntxLine": example.context_line,
-                "isMain": True,
-            }
-        )
+        file_entity = datastore.Entity(self._get_files_key(example_id, 0),
+                                       exclude_from_indexes=("content", ))
+        file_entity.update({
+            "name":
+            self._get_file_name_with_extension(example.tag.name, example.sdk),
+            "content":
+            example.code,
+            "cntxLine":
+            example.context_line,
+            "isMain":
+            True,
+        })
         return file_entity
 
-    def _to_additional_file_entity(self, example_id: str, file: ImportFile, idx: int):
-        file_entity = datastore.Entity(
-            self._get_files_key(example_id, idx), exclude_from_indexes=("content",)
-        )
-        file_entity.update(
-            {
-                "name": file.name,
-                "content": file.content,
-                "cntxLine": file.context_line,
-                "isMain": False,
-            }
-        )
+    def _to_additional_file_entity(self, example_id: str, file: ImportFile,
+                                   idx: int):
+        file_entity = datastore.Entity(self._get_files_key(example_id, idx),
+                                       exclude_from_indexes=("content", ))
+        file_entity.update({
+            "name": file.name,
+            "content": file.content,
+            "cntxLine": file.context_line,
+            "isMain": False,
+        })
         return file_entity
-
 
     def _to_dataset_entity(self, dataset_id: str, file_name: str):
         dataset_entity = datastore.Entity(self._get_dataset_key(dataset_id))
@@ -380,21 +380,18 @@ class DatastoreClient:
 
     def _to_dataset_nested_entity(self, dataset_id: str, emulator: Emulator):
         nested_entity = datastore.Entity()
-        nested_entity.update(
-            {
-                "dataset": self._get_dataset_key(dataset_id),
-                "emulator": emulator.type,
-                "config": json.dumps({"topic": emulator.topic.id})
-            }
-        )
+        nested_entity.update({
+            "dataset": self._get_dataset_key(dataset_id),
+            "emulator": emulator.type,
+            "config": json.dumps({"topic": emulator.topic.id})
+        })
         return nested_entity
 
     def _snippet_datasets(self, example: Example) -> List[datastore.Entity]:
         datasets = []
         for emulator in example.tag.emulators:
             dataset_nested_entity = self._to_dataset_nested_entity(
-                emulator.topic.source_dataset, emulator
-            )
+                emulator.topic.source_dataset, emulator)
             datasets.append(dataset_nested_entity)
         return datasets
 
